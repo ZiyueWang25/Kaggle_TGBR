@@ -161,13 +161,13 @@ def calc_f2_score(gt_bboxes_list, pred_bboxes_list, verbose=False):
 
 def get_path(row, params):
     row['old_image_path'] = params['root_dir'] / f'train_images/video_{row.video_id}/{row.video_frame}.jpg'
-    row['image_path'] = params['image_dir'] / f'train_images/video_{row.video_id}/{row.video_frame}.jpg'
+    row['image_path'] = params['image_dir'] / f'video_{row.video_id}_{row.video_frame}.jpg'
     row['label_path'] = params['label_dir'] / f'video_{row.video_id}_{row.video_frame}.txt'
     return row
 
 def make_copy(path, params):
     # TODO: fix split issue
-    data = path.split('/')
+    data = str(path).split('/')
     filename = data[-1]
     video_id = data[-2]
     new_path = params["image_dir"] / f'{video_id}_{filename}'
@@ -491,6 +491,7 @@ def seed_torch(seed=42):
     
     
 def create_logger(filename, filemode='a'):
+    # better logging file - output the in terminal as well
     formatter = "%(asctime)s %(levelname)s: %(message)s"
     datefmt = "%m/%d/%Y %I:%M:%S %p"
     logging.basicConfig(filename=filename, format=formatter, datefmt=datefmt, 

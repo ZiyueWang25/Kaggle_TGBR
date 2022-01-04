@@ -1,4 +1,11 @@
 # Byte-compiled / optimized / DLL files
+input/
+notebook/yolov5/
+notebook/wandb/
+output/
+.vscode/
+yolov5s.pt
+
 __pycache__/
 *.py[cod]
 *$py.class

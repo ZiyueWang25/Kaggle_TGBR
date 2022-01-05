@@ -159,9 +159,12 @@ def calc_f2_score(gt_bboxes_list, pred_bboxes_list, verbose=False):
     return f_beta(tps, fps, fns, beta=2)
 
 
-def get_path(row, params):
+def get_path(row, params, infer=False):
     row['old_image_path'] = params['root_dir'] / f'train_images/video_{row.video_id}/{row.video_frame}.jpg'
-    row['image_path'] = params['image_dir'] / f'video_{row.video_id}_{row.video_frame}.jpg'
+    if infer:
+        row['image_path'] = row["old_image_path"]
+    else:
+        row['image_path'] = params['image_dir'] / f'video_{row.video_id}_{row.video_frame}.jpg'
     row['label_path'] = params['label_dir'] / f'video_{row.video_id}_{row.video_frame}.txt'
     return row
 

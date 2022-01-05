@@ -41,3 +41,6 @@ def run(params):
             env.predict(pred_df)
             if idx<3:
                 display(util.show_img(img, bboxes, colors, bbox_format='coco'))
+                
+        sub_df = pd.read_csv('submission.csv')
+        print(sub_df.head())

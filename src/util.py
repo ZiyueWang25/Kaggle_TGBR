@@ -5,6 +5,7 @@ import shutil
 import logging
 import random
 import pickle
+import subprocess
 from PIL import Image
 
 import numpy as np
@@ -66,26 +67,6 @@ def plot_img(df, idx, image_dir, pred_bboxes=None):
         img = draw_predictions(img, pred_bboxes)
     plt.imshow(img[:, :, ::-1])    
     
-def generate_gt_and_pred(annotations_str):
-    annotations = decode_annotations(annotations_str)
-    gt_bboxes = []
-    pred_bboxes = []
-    for ann in annotations:
-        gt_bboxes.append(np.array([ann['x'], ann['y'], ann['width'], ann['height']]))
-
-        # pseudo pred bbox
-        conf = np.random.uniform()
-        # noise = (np.random.randn(4)*5).round()
-        pred_bbox = np.array([conf, ann['x'], ann['y'], ann['width']*1.25, ann['height']*1.25])
-        # pred_bbox[1:] = pred_bbox[1:] + noise
-        pred_bboxes.append(pred_bbox)
-
-    gt_bboxes = np.array(gt_bboxes)
-    pred_bboxes = np.array(pred_bboxes)
-    return gt_bboxes, pred_bboxes
-
-
-# image wise metric implementation
 def calc_iou(bboxes1, bboxes2, bbox_mode='xywh'):
     assert len(bboxes1.shape) == 2 and bboxes1.shape[1] == 4
     assert len(bboxes2.shape) == 2 and bboxes2.shape[1] == 4
@@ -109,9 +90,31 @@ def calc_iou(bboxes1, bboxes2, bbox_mode='xywh'):
     iou = interArea / (boxAArea + np.transpose(boxBArea) - interArea)
     return iou
 
-
 def f_beta(tp, fp, fn, beta=2):
-    return (1 + beta**2) * tp / ((1 + beta**2) * tp + beta**2 * fn + fp)
+    if tp == 0:
+        return 0
+    return (1+beta**2)*tp / ((1+beta**2)*tp + beta**2*fn+fp)
+
+def calc_is_correct_at_iou_th(gt_bboxes, pred_bboxes, iou_th, verbose=False):
+    gt_bboxes = gt_bboxes.copy()
+    pred_bboxes = pred_bboxes.copy()
+    
+    tp = 0
+    fp = 0
+    for k, pred_bbox in enumerate(pred_bboxes): # fixed in ver.7
+        ious = calc_iou(gt_bboxes, pred_bbox[None, 1:])
+        max_iou = ious.max()
+        if max_iou > iou_th:
+            tp += 1
+            gt_bboxes = np.delete(gt_bboxes, ious.argmax(), axis=0)
+        else:
+            fp += 1
+        if len(gt_bboxes) == 0:
+            fp += len(pred_bboxes) - (k + 1) # fix in ver.7
+            break
+
+    fn = len(gt_bboxes)
+    return tp, fp, fn
 
 def calc_is_correct(gt_bboxes, pred_bboxes):
     """
@@ -123,40 +126,39 @@ def calc_is_correct(gt_bboxes, pred_bboxes):
         return tps, fps, fns
     
     elif len(gt_bboxes) == 0:
-        tps, fps, fns = 0, len(pred_bboxes), 0
+        tps, fps, fns = 0, len(pred_bboxes)*11, 0
         return tps, fps, fns
     
     elif len(pred_bboxes) == 0:
-        tps, fps, fns = 0, 0, len(gt_bboxes)
+        tps, fps, fns = 0, 0, len(gt_bboxes)*11
         return tps, fps, fns
     
     pred_bboxes = pred_bboxes[pred_bboxes[:,0].argsort()[::-1]] # sort by conf
     
     tps, fps, fns = 0, 0, 0
     for iou_th in np.arange(0.3, 0.85, 0.05):
-        tp, fp, fn = calc_iou(gt_bboxes, pred_bboxes, iou_th)
+        tp, fp, fn = calc_is_correct_at_iou_th(gt_bboxes, pred_bboxes, iou_th)
         tps += tp
         fps += fp
         fns += fn
     return tps, fps, fns
-
 
 def calc_f2_score(gt_bboxes_list, pred_bboxes_list, verbose=False):
     """
     gt_bboxes_list: list of (N, 4) np.array in xywh format
     pred_bboxes_list: list of (N, 5) np.array in conf+xywh format
     """
-    tps, fps, fns = 0, 0, 0
+    tps, fps, fns = [], [], []
     for gt_bboxes, pred_bboxes in zip(gt_bboxes_list, pred_bboxes_list):
         tp, fp, fn = calc_is_correct(gt_bboxes, pred_bboxes)
-        tps += tp
-        fps += fp
-        fns += fn
+        tps.append(tp)
+        fps.append(fp)
+        fns.append(fn)
         if verbose:
             num_gt = len(gt_bboxes)
             num_pred = len(pred_bboxes)
             print(f'num_gt:{num_gt:<3} num_pred:{num_pred:<3} tp:{tp:<3} fp:{fp:<3} fn:{fn:<3}')
-    return f_beta(tps, fps, fns, beta=2)
+    return tps, fps, fns # f_beta(tps, fps, fns, beta=2)
 
 
 def get_path(row, params, infer=False):
@@ -531,7 +533,7 @@ def predict(model, img, size=768, augment=False):
         confs   = preds.confidence.values
         return bboxes, confs
     else:
-        return [],[]
+        return np.array([]),[]
     
 def format_prediction(bboxes, confs):
     annot = ''
@@ -544,9 +546,9 @@ def format_prediction(bboxes, confs):
         annot = annot.strip(' ')
     return annot
 
-def show_img(img, bboxes, colors, bbox_format='yolo'):
-    names  = ['starfish']*len(bboxes)
-    labels = [0]*len(bboxes)
+def show_img(img, bboxes, colors, bbox_format='yolo', labels=None):
+    names  = ['starfish']*len(bboxes) if labels is None else ["prediction"] * (len(labels) - sum(labels)) + ["real"] * sum(labels)
+    labels = [0]*len(bboxes) if labels is None else labels
     img    = draw_bboxes(img = img,
                            bboxes = bboxes, 
                            classes = names,
@@ -555,6 +557,7 @@ def show_img(img, bboxes, colors, bbox_format='yolo'):
                            colors = colors, 
                            bbox_format = bbox_format,
                            line_thickness = 2)
+
     return Image.fromarray(img).resize((800, 400))
 
 
@@ -565,3 +568,22 @@ def write_hyp(params):
         
 def class2dict(f):
     return dict((name, getattr(f, name)) for name in dir(f) if not name.startswith('__'))
+
+
+def upload(params):
+    data_version = "-".join(params["exp_name"].split("_"))
+    if os.path.exists(params["output_dir"] / "wandb"):
+        shutil.move(str(params["output_dir"] / "wandb"), 
+                    str(params["output_dir"].parent / f"{params['exp_name']}_wandb/")
+        )
+    with open(params["output_dir"] / "dataset-metadata.json", "w") as f:
+        f.write("{\n")
+        f.write(f"""  "title": "{data_version}",\n""")
+        f.write(f"""  "id": "vincentwang25/{data_version}",\n""")
+        f.write("""  "licenses": [\n""")
+        f.write("""    {\n""")
+        f.write("""      "name": "CC0-1.0"\n""")
+        f.write("""    }\n""")
+        f.write("""  ]\n""")
+        f.write("""}""")    
+    subprocess.call(["kaggle", "datasets", "create", "-p", str(params["output_dir"]), "-r", "zip"])

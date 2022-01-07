@@ -6,13 +6,15 @@ import time
 import ast 
 import yaml
 import sys
+import shutil
 import subprocess
 sys.path.append("./src")
 sys.path.append("./notebook/yolov5")
 
+import torch
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import GroupKFold
+from sklearn.model_selection import GroupKFold, StratifiedGroupKFold
 import util
 import hyp
 
@@ -26,26 +28,41 @@ class Pre:
         self.df = pd.read_csv(self.params['root_dir'] / 'train.csv')
         self.df = self.df.apply(lambda x: util.get_path(x, self.params), axis=1)
         self.df['annotations'] = self.df['annotations'].apply(lambda x: ast.literal_eval(x))
+        self.df['has_annotations'] = self.df['annotations'].apply(len) > 0        
         self.df['num_bbox'] = self.df['annotations'].apply(len)        
         data = (self.df.num_bbox>0).value_counts(normalize=True) * 100
         logging.debug(f"No BBox: {data[0]:0.2f}% | With BBox: {data[1]:0.2f}%")
+        self.cv_split()
         if self.params['remove_nobbox']:
             logging.info("Remove no bbox instance")
             self.df = self.df.query("num_bbox>0")
         self.df['bboxes'] = self.df.annotations.apply(util.get_bbox)
         self.df['width']  = 1280
         self.df['height'] = 720    
-        self.cv_split()
         util.seed_torch(self.params["seed"])
         self.create_dataset()
+        if self.params["copy_image"]:
+            self.copy_image()
+            self.create_yolo_format()
+        
         return 
     
     def cv_split(self):
-        logging.debug("cv_split")
-        kf = GroupKFold(n_splits = 5)
+        logging.debug("cv_split")        
+        diff_place = (self.df["has_annotations"] + self.df["sequence"]).diff()
+        diff_place = diff_place.shift(-1)
+        diff_place.iloc[-1] = 1
+        diff_place_filter = diff_place[diff_place!=0] 
+        diff_place_filter[:] =1
+        subsequence_id_place = diff_place_filter.cumsum()
+        self.df["subsequence_id"] = np.nan
+        self.df.loc[subsequence_id_place.index, "subsequence_id"] = subsequence_id_place.values
+        self.df["subsequence_id"] = self.df["subsequence_id"].fillna(method="backfill")        
+                
+        skf = StratifiedGroupKFold(n_splits=5)
         self.df = self.df.reset_index(drop=True)
         self.df['fold'] = -1
-        for fold, (_, val_idx) in enumerate(kf.split(self.df, y = self.df.video_id.tolist(), groups=self.df.sequence)):
+        for fold, (_, val_idx) in enumerate(skf.split(self.df, groups=self.df['subsequence_id'], y=self.df["has_annotations"])):
             self.df.loc[val_idx, 'fold'] = fold
         logging.debug(self.df.fold.value_counts())
         return        
@@ -113,7 +130,7 @@ class Pre:
                     annot = ' '.join(annot)
                     annot = annot.strip(' ')
                     f.write(annot)
-        logging.debug('Missing:',cnt) 
+        logging.debug(f'Missing: {cnt}') 
         return       
     
     def copy_image(self):
@@ -125,7 +142,7 @@ class Pre:
     
 def parse_args():
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('--project', type=str, default='yolov5s')
+    parser.add_argument('--project', type=str, default='TGBR')
     parser.add_argument('--exp_name', type=str, default='todo')
     parser.add_argument('--fold', type=int, nargs='+', default=0)        
     parser.add_argument('--data_path', type=str, default="../data/tensorflow-great-barrier-reef/")
@@ -140,12 +157,11 @@ def parse_args():
     parser.add_argument('--workers', type=int, default=8)
     
     # for inference
+    parser.add_argument("--img_size", type=int, default=1280) # to save exp parameters
     parser.add_argument("--no_train", action="store_true") # to save exp parameters
-    parser.add_argument('--repo', type=str, default='/kaggle/input/yolov5-lib-ds')
-    parser.add_argument("--conf", type=float, default=0.15)
-    parser.add_argument("--iou", type=float, default=0.5)
-    parser.add_argument("--augment", action='store_true')
-    parser.add_argument("--img_size", type=int, default=1280)
+    
+    # upload to kaggle
+    parser.add_argument("--upload", action='store_true')   
 
     args = parser.parse_args()
     # convert to dictionary
@@ -165,21 +181,25 @@ def parse_args():
     output_dir = Path(os.path.abspath("./output/"))
     
     output_dir = output_dir / params["exp_name"]
-    params['ckpt_path'] = output_dir / params["weights"].split(".")[0] / params["exp_name"] /  "weights" / "best.pt"
+    params['ckpt_path'] = output_dir / "TGBR" / params["exp_name"] /  "weights" / "best.pt"
     
     cfg_dir = output_dir / "config"
     log_file = output_dir / "log.txt"
     params['output_dir'] = output_dir
     params['cfg_dir'] = cfg_dir
     params["log_file"] = log_file
-    params["hyp_param"] = hyp.read_hyp_param(params["hyp_name"])
-    params["hyp_file"] = cfg_dir / "hyp.yaml"
+    if params["hyp_name"] != "None":
+        params["hyp_param"] = hyp.read_hyp_param(params["hyp_name"])
+        params["hyp_file"] = cfg_dir / "hyp.yaml"
+    else:
+        params["hyp_file"] = ""
     
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)            
     if not os.path.exists(cfg_dir):
         os.makedirs(cfg_dir)
-    util.write_hyp(params)
+    if params["hyp_name"] != "None":
+        util.write_hyp(params)
     util.save_pickle(params, cfg_dir / "params.pkl")
     return params
 
@@ -187,34 +207,42 @@ def call_subprocess(params):
     script_path = Path("./notebook/yolov5/train.py").resolve()
     data_path = (params["cfg_dir"] / "bgr.yaml").resolve()
     input_dir = Path("./input/").resolve()
-    hyp_file = params["hyp_file"].resolve()
+    hyp_file = params["hyp_file"].resolve() if params["hyp_file"] != "" else ""
     logging.debug(str(script_path))
     logging.debug(str(data_path))
     logging.debug(str(input_dir))
     os.chdir(params['output_dir'])
-    subprocess.call(["python3", str(script_path), 
+    args = ["python3", str(script_path), 
                      "--img", str(params['img_size']),
                      "--batch", str(params['batch']),
                      "--data", str(data_path),
-                     "--hyp", str(hyp_file),
                      "--epochs", str(params['epochs']),
                      "--weights", str(input_dir / params['weights']),
                      "--workers", str(params['workers']),
                      "--name", params["exp_name"],
                      "--project", params["project"]
                      ]
-                    )    
+    if hyp_file != "":
+        args.extend(["--hyp", str(hyp_file)])
+    subprocess.call(args)    
 
 def main():
     params = parse_args()
     util.create_logger(params['log_file'], filemode='a')
     print("\nLOGGING TO: ", params['log_file'], "\n")
     if not params["no_train"]:
+        torch.backends.cudnn.benchmark = True
         pre = Pre(params)
         pre.prepare_data()
-        if params["copy_image"]:
-            pre.copy_image()
         call_subprocess(params)
-    
+    if params["upload"]:
+        util.upload(params)
+
 if __name__ == "__main__":
     main()
+    # TODO:
+    # check training recipe
+    # check ensemble
+    # adjust fitness
+    # tracking https://www.kaggle.com/parapapapam/yolox-inference-tracking-on-cots-lb-0-539
+    # other dataset

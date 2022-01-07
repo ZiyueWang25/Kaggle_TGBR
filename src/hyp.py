@@ -2,7 +2,7 @@ import util
 
 class Base:
     lr0 = 0.01  # initial learning rate (SGD=1E-2, Adam=1E-3)
-    lrf = 0.1  # final OneCycleLR learning rate (lr0 * lrf)
+    lrf = 0.1  # final OneCycleLR learning rate (lr0 * lrf), # 0.2
     momentum = 0.937  # SGD momentum/Adam beta1
     weight_decay = 0.0005  # optimizer weight decay 5e-4
     warmup_epochs = 3.0  # warmup epochs (fractions ok)
@@ -20,15 +20,15 @@ class Base:
     hsv_h = 0.015  # image HSV-Hue augmentation (fraction)
     hsv_s = 0.7  # image HSV-Saturation augmentation (fraction)
     hsv_v = 0.4  # image HSV-Value augmentation (fraction)
-    degrees = 0.30  # image rotation (+/- deg)
+    degrees = 0.30  # image rotation (+/- deg)  # 0
     translate = 0.10  # image translation (+/- fraction)
-    scale = 0.10  # image scale (+/- gain)
-    shear = 2.0  # image shear (+/- deg)
+    scale = 0.10  # image scale (+/- gain) # 0.5
+    shear = 2.0  # image shear (+/- deg) # 0.0
     perspective = 0.0  # image perspective (+/- fraction), range 0-0.001
     flipud = 0.0  # image flip up-down (probability)
     fliplr = 0.5  # image flip left-right (probability)
-    mosaic = 0.2  # image mosaic (probability)
-    mixup = 0.5 # image mixup (probability)
+    mosaic = 0.2  # image mosaic (probability) # 1.0
+    mixup = 0.5 # image mixup (probability) # 0.0
     copy_paste = 0.0  # segment copy-paste (probability)
     
 def read_hyp_param(name):

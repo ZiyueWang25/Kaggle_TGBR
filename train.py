@@ -155,6 +155,8 @@ def parse_args():
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--weights', type=str, default="yolov5s.pt")
     parser.add_argument('--workers', type=int, default=8)
+    parser.add_argument('--patience', type=int, default=100)
+    parser.add_argument('--optimizer', type=str, default="AdamW")
     
     # for inference
     parser.add_argument("--img_size", type=int, default=1280) # to save exp parameters
@@ -219,6 +221,8 @@ def call_subprocess(params):
                      "--epochs", str(params['epochs']),
                      "--weights", str(input_dir / params['weights']),
                      "--workers", str(params['workers']),
+                     "--patience", str(params['patience']),
+                     "--optimizer", str(params['optimizer']),
                      "--name", params["exp_name"],
                      "--project", params["project"]
                      ]

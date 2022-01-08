@@ -1,11 +1,11 @@
 import util
 
 class Base:
-    lr0 = 0.01  # initial learning rate (SGD=1E-2, Adam=1E-3)
-    lrf = 0.1  # final OneCycleLR learning rate (lr0 * lrf), # 0.2
+    lr0 = 0.001  # initial learning rate (SGD=1E-2, Adam=1E-3)
+    lrf = 0.2  # final OneCycleLR learning rate (lr0 * lrf), # 0.2
     momentum = 0.937  # SGD momentum/Adam beta1
     weight_decay = 0.0005  # optimizer weight decay 5e-4
-    warmup_epochs = 3.0  # warmup epochs (fractions ok)
+    warmup_epochs = 0.05  # warmup epochs (fractions ok)
     warmup_momentum = 0.8  # warmup initial momentum
     warmup_bias_lr = 0.1  # warmup initial bias lr
     box = 0.05  # box loss gain
@@ -25,11 +25,17 @@ class Base:
     scale = 0.10  # image scale (+/- gain) # 0.5
     shear = 2.0  # image shear (+/- deg) # 0.0
     perspective = 0.0  # image perspective (+/- fraction), range 0-0.001
-    flipud = 0.0  # image flip up-down (probability)
+    flipud = 0.5  # image flip up-down (probability)
     fliplr = 0.5  # image flip left-right (probability)
     mosaic = 0.2  # image mosaic (probability) # 1.0
     mixup = 0.5 # image mixup (probability) # 0.0
     copy_paste = 0.0  # segment copy-paste (probability)
+    
+class LR0005(Base):
+    lr0 = 0.005
+
+class LRF001(Base):
+    lrf = 0.01
     
 def read_hyp_param(name):
     assert name in globals(), "name is not in " + str(globals())

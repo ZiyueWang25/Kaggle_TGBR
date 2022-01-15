@@ -1,6 +1,7 @@
 # Byte-compiled / optimized / DLL files
 input/
 notebook/yolov5/
+notebook/FUnIE-GAN/
 notebook/wandb/
 output/
 .vscode/

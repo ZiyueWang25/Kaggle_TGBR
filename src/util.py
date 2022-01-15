@@ -84,9 +84,9 @@ def calc_iou(bboxes1, bboxes2, bbox_mode='xywh'):
     yA = np.maximum(y11, np.transpose(y21))
     xB = np.minimum(x12, np.transpose(x22))
     yB = np.minimum(y12, np.transpose(y22))
-    interArea = np.maximum((xB - xA + 1), 0) * np.maximum((yB - yA + 1), 0)
-    boxAArea = (x12 - x11 + 1) * (y12 - y11 + 1)
-    boxBArea = (x22 - x21 + 1) * (y22 - y21 + 1)
+    interArea = np.maximum((xB - xA + 1e-9), 0) * np.maximum((yB - yA + 1e-9), 0)
+    boxAArea = (x12 - x11 + 1e-9) * (y12 - y11 + 1e-9)
+    boxBArea = (x22 - x21 + 1e-9) * (y22 - y21 + 1e-9)
     iou = interArea / (boxAArea + np.transpose(boxBArea) - interArea)
     return iou
 
@@ -102,16 +102,16 @@ def calc_is_correct_at_iou_th(gt_bboxes, pred_bboxes, iou_th, verbose=False):
     tp = 0
     fp = 0
     for k, pred_bbox in enumerate(pred_bboxes): # fixed in ver.7
+        if len(gt_bboxes) == 0:
+            fp += len(pred_bboxes) - k # fix in ver.7
+            break
         ious = calc_iou(gt_bboxes, pred_bbox[None, 1:])
         max_iou = ious.max()
-        if max_iou > iou_th:
+        if max_iou >= iou_th:
             tp += 1
             gt_bboxes = np.delete(gt_bboxes, ious.argmax(), axis=0)
         else:
             fp += 1
-        if len(gt_bboxes) == 0:
-            fp += len(pred_bboxes) - (k + 1) # fix in ver.7
-            break
 
     fn = len(gt_bboxes)
     return tp, fp, fn
@@ -519,7 +519,7 @@ def load_model(params):
     model.iou  = params['iou']  # NMS IoU threshold
     model.classes = None   # (optional list) filter by class, i.e. = [0, 15, 16] for persons, cats and dogs
     model.multi_label = False  # NMS multiple labels per box
-    model.max_det = 1000  # maximum number of detections per image
+    model.max_det = 50  # maximum number of detections per image
     return model
 
 

@@ -26,6 +26,9 @@ class Pre:
     def prepare_data(self):
         logging.debug("prepare_data")
         self.df = pd.read_csv(self.params['root_dir'] / 'train.csv')
+        if self.params["debug"]:
+            num_sample = self.df.shape[0] // 10
+            self.df = self.df.sample(num_sample)
         self.df = self.df.apply(lambda x: util.get_path(x, self.params), axis=1)
         self.df['annotations'] = self.df['annotations'].apply(lambda x: ast.literal_eval(x))
         self.df['has_annotations'] = self.df['annotations'].apply(len) > 0        
@@ -33,9 +36,23 @@ class Pre:
         data = (self.df.num_bbox>0).value_counts(normalize=True) * 100
         logging.debug(f"No BBox: {data[0]:0.2f}% | With BBox: {data[1]:0.2f}%")
         self.cv_split()
+        util.seed_torch(self.params["seed"])
         if self.params['remove_nobbox']:
             logging.info("Remove no bbox instance")
-            self.df = self.df.query("num_bbox>0")
+            fold = self.params["fold"]
+            # keep the background in validation fold
+            self.df = self.df.query(f"num_bbox>0 or fold == {fold}")
+        if self.params['reduce_nobbox'] > 0:
+            reduce_nobbox = self.params['reduce_nobbox']
+            logging.info(f"reduce_nobbox {reduce_nobbox:.2%}, current size: {self.df.shape[0]}")
+            fold = self.params["fold"]
+            IS_nobbox_index = self.df.query(f"num_bbox==0 or fold != {fold}").index
+            drop_size = int(len(IS_nobbox_index) * reduce_nobbox)
+            drop_index = np.random.choice(IS_nobbox_index, size=drop_size, replace=False)
+            self.df.drop(drop_index, axis=0, inplace=True)
+            self.df.reset_index(inplace=True, drop=True)
+            logging.info(f"after reducing, df size: {self.df.shape[0]}")
+            
         self.df['bboxes'] = self.df.annotations.apply(util.get_bbox)
         self.df['width']  = 1280
         self.df['height'] = 720    
@@ -48,22 +65,35 @@ class Pre:
         return 
     
     def cv_split(self):
-        logging.debug("cv_split")        
-        diff_place = (self.df["has_annotations"] + self.df["sequence"]).diff()
-        diff_place = diff_place.shift(-1)
-        diff_place.iloc[-1] = 1
-        diff_place_filter = diff_place[diff_place!=0] 
-        diff_place_filter[:] =1
-        subsequence_id_place = diff_place_filter.cumsum()
-        self.df["subsequence_id"] = np.nan
-        self.df.loc[subsequence_id_place.index, "subsequence_id"] = subsequence_id_place.values
-        self.df["subsequence_id"] = self.df["subsequence_id"].fillna(method="backfill")        
-                
-        skf = StratifiedGroupKFold(n_splits=5)
-        self.df = self.df.reset_index(drop=True)
-        self.df['fold'] = -1
-        for fold, (_, val_idx) in enumerate(skf.split(self.df, groups=self.df['subsequence_id'], y=self.df["has_annotations"])):
-            self.df.loc[val_idx, 'fold'] = fold
+        logging.debug("cv_split")   
+        split_cri = self.params["cv_split"]
+        if split_cri == "subsequence":     
+            diff_place = (self.df["has_annotations"] + self.df["sequence"]).diff()
+            diff_place = diff_place.shift(-1)
+            diff_place.iloc[-1] = 1
+            diff_place_filter = diff_place[diff_place!=0] 
+            diff_place_filter[:] =1
+            subsequence_id_place = diff_place_filter.cumsum()
+            self.df["subsequence_id"] = np.nan
+            self.df.loc[subsequence_id_place.index, "subsequence_id"] = subsequence_id_place.values
+            self.df["subsequence_id"] = self.df["subsequence_id"].fillna(method="backfill")        
+                    
+            skf = StratifiedGroupKFold(n_splits=5)
+            self.df = self.df.reset_index(drop=True)
+            self.df['fold'] = -1
+            for fold, (_, val_idx) in enumerate(skf.split(self.df, groups=self.df['subsequence_id'], y=self.df["has_annotations"])):
+                self.df.loc[val_idx, 'fold'] = fold
+        elif split_cri == "video_id":
+            self.df["fold"] = self.df["video_id"]
+        elif split_cri == "sequence":
+            skf = StratifiedGroupKFold(n_splits=5)
+            self.df = self.df.reset_index(drop=True)
+            self.df['fold'] = -1
+            for fold, (_, val_idx) in enumerate(skf.split(self.df, groups=self.df['sequence'], y=self.df["has_annotations"])):
+                self.df.loc[val_idx, 'fold'] = fold
+        else:
+            logging.error(f"{split_cri} not in subsequence, video_id, sequence")
+            
         logging.debug(self.df.fold.value_counts())
         return        
     
@@ -150,14 +180,20 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=2022)
     parser.add_argument("--hyp_name", type=str, default="Base")
     parser.add_argument('--copy_image', action='store_true')
+    parser.add_argument('--debug', action="store_true")
+    parser.add_argument('--cv_split', type=str, default="subsequence") # subsequence, video_id, sequence
+    parser.add_argument('--reduce_nobbox', type=float, default=0)
+    
     
     parser.add_argument('--batch', type=int, default=16)
-    parser.add_argument('--epochs', type=int, default=20)
+    parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--weights', type=str, default="yolov5s.pt")
     parser.add_argument('--workers', type=int, default=8)
-    parser.add_argument('--patience', type=int, default=100)
+    parser.add_argument('--patience', type=int, default=10)
     parser.add_argument('--optimizer', type=str, default="AdamW")
-    
+    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')    
+    parser.add_argument('--sync-bn', action='store_true', help='use SyncBatchNorm, only available in DDP mode')
+
     # for inference
     parser.add_argument("--img_size", type=int, default=1280) # to save exp parameters
     parser.add_argument("--no_train", action="store_true") # to save exp parameters
@@ -173,7 +209,8 @@ def parse_args():
     params['data_path'] = Path(params['data_path']).resolve()
     params['root_dir'] = params['data_path']
     params['image_dir'] = params['data_path'] / 'images'    
-    params['label_dir'] = params['data_path'] / 'labels'    
+    params['label_dir'] = params['data_path'] / 'labels'
+    
     
     if not os.path.exists(params['label_dir']):
         os.makedirs(params['label_dir'])
@@ -224,10 +261,13 @@ def call_subprocess(params):
                      "--patience", str(params['patience']),
                      "--optimizer", str(params['optimizer']),
                      "--name", params["exp_name"],
-                     "--project", params["project"]
+                     "--project", params["project"],
+                     '--device', params['device'],
                      ]
     if hyp_file != "":
         args.extend(["--hyp", str(hyp_file)])
+    if params["sync_bn"]:
+        args.extend(["--sync-bn"])
     subprocess.call(args)    
 
 def main():
@@ -244,9 +284,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # TODO:
-    # check training recipe
-    # check ensemble
-    # adjust fitness
-    # tracking https://www.kaggle.com/parapapapam/yolox-inference-tracking-on-cots-lb-0-539
-    # other dataset

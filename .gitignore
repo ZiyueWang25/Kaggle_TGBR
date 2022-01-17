@@ -1,5 +1,7 @@
 # Byte-compiled / optimized / DLL files
 input/
+mmdetection/
+notebook/model_output/
 notebook/yolov5/
 notebook/FUnIE-GAN/
 notebook/wandb/

@@ -663,7 +663,7 @@ def mmcfg_from_param(params):
     cfg.runner.max_epochs = params['epochs']
     cfg.evaluation.interval = 2
     cfg.evaluation.save_best='auto'
-    cfg.workflow = [('train',1), ("val",1)]
+    cfg.workflow = [('train',1)]
     
     logging.info(str(cfg))
     return cfg
@@ -691,54 +691,5 @@ def add_data_pipeline(cfg, params):
     
     
     cfg.data.samples_per_gpu = params['batch'] // len(cfg.gpu_ids)
-    cfg.data.workers_per_gpu = params['workers'] // len(cfg.gpu_ids)
-        
-    img_norm_cfg = dict(
-        mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
-    
-    train_pipeline = [
-        dict(type='LoadImageFromFile'),
-        dict(type='LoadAnnotations', with_bbox=True),
-        dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
-        dict(type='RandomFlip', flip_ratio=0.5),
-        dict(type='Normalize', **img_norm_cfg),
-        dict(type='Pad', size_divisor=32),
-        dict(type='DefaultFormatBundle'),
-        dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
-    ]
-    
-    valid_pipeline =  [
-        dict(type='LoadImageFromFile'),
-        dict(type='LoadAnnotations', with_bbox=True),
-        dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
-        dict(type='Normalize', **img_norm_cfg),
-        dict(type='Pad', size_divisor=32),
-        dict(type='DefaultFormatBundle'),
-        dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
-    ]
-
-    test_pipeline = [
-        dict(type='LoadImageFromFile'),
-        dict(
-            type='MultiScaleFlipAug',
-            img_scale=(1333, 800),
-            flip=False,
-            transforms=[
-                dict(type='Resize', keep_ratio=True),
-                dict(type='RandomFlip'),
-                dict(type='Normalize', **img_norm_cfg),
-                dict(type='Pad', size_divisor=32),
-                dict(type='ImageToTensor', keys=['img']),
-                dict(type='Collect', keys=['img'])
-            ])
-    ]    
-    
-
-    cfg.train_pipeline = train_pipeline
-    cfg.val_pipeline = valid_pipeline
-    cfg.test_pipeline = test_pipeline
-
-    cfg.data.train.pipeline = cfg.train_pipeline
-    cfg.data.val.pipeline = cfg.val_pipeline
-    cfg.data.test.pipeline = cfg.test_pipeline 
+    cfg.data.workers_per_gpu = params['workers'] // len(cfg.gpu_ids)        
     return cfg

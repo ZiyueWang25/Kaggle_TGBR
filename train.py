@@ -300,7 +300,7 @@ def call_subprocess(params):
         cfg = util.mmcfg_from_param(params)
         meta = dict()
         meta['config'] = cfg.pretty_text
-        datasets = [build_dataset(cfg.data.train), build_dataset(cfg.data.val)]
+        datasets = [build_dataset(cfg.data.train)] #, build_dataset(cfg.data.val)] # no valid works ok
         model = build_detector(cfg.model, train_cfg=cfg.get('train_cfg'), test_cfg=cfg.get('test_cfg'))
         model.init_weights()
         model.CLASSES = datasets[0].CLASSES

@@ -1,3 +1,4 @@
+import sys
 import cv2
 import os
 from ast import literal_eval
@@ -5,6 +6,7 @@ import shutil
 import logging
 import random
 import pickle
+import yaml
 import subprocess
 from PIL import Image
 
@@ -497,10 +499,13 @@ def seed_torch(seed=42):
     
 def create_logger(filename, filemode='a'):
     # better logging file - output the in terminal as well
+    file_handler = logging.FileHandler(filename=filename, mode=filemode)
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    handlers = [file_handler, stdout_handler]
     formatter = "%(asctime)s %(levelname)s: %(message)s"
     datefmt = "%m/%d/%Y %I:%M:%S %p"
-    logging.basicConfig(filename=filename, format=formatter, datefmt=datefmt, 
-                        level=logging.DEBUG, filemode=filemode)
+    logging.basicConfig(format=formatter, datefmt=datefmt, 
+                        level=logging.DEBUG, handlers=handlers)
     return
 
 def save_pickle(obj, folder_path):
@@ -508,6 +513,15 @@ def save_pickle(obj, folder_path):
 
 def load_pickle(folder_path):
     return pickle.load(open(folder_path, 'rb'))
+
+def save_yaml(obj, folder_path):
+    with open(folder_path, 'w') as file:
+        yaml.dump(obj, file)    
+        
+def load_yaml(folder_path):
+    with open(folder_path) as file:
+        data = yaml.load(file, Loader=yaml.FullLoader)
+    return data
 
 def load_model(params):
     model = torch.hub.load(params['repo'],
@@ -587,3 +601,144 @@ def upload(params):
         f.write("""  ]\n""")
         f.write("""}""")    
     subprocess.call(["kaggle", "datasets", "create", "-p", str(params["output_dir"]), "-r", "zip"])
+    
+def coco(df):
+    annotion_id = 0
+    images = []
+    annotations = []
+
+    categories = [{'id': 0, 'name': 'cots'}]
+
+    for i, row in df.iterrows():
+
+        images.append({
+            "id": i,
+            "file_name": f"video_{row['video_id']}_{row['video_frame']}.jpg",
+            "height": 720,
+            "width": 1280,
+        })
+        for bbox in row['annotations']:
+            annotations.append({
+                "id": annotion_id,
+                "image_id": i,
+                "category_id": 0,
+                "bbox": list(bbox.values()),
+                "area": bbox['width'] * bbox['height'],
+                "segmentation": [],
+                "iscrowd": 0
+            })
+            annotion_id += 1
+
+    json_file = {'categories':categories, 'images':images, 'annotations':annotations}
+    return json_file
+
+
+def mmcfg_from_param(params):
+    from mmcv import Config
+    # model
+    cfg = Config.fromfile(params['hyp_param']['base_file'])
+    cfg.load_from = params['hyp_param']['load_from']    
+    if params['hyp_param']['model_type'] == 'faster_rcnn':
+        # for head in cfg.model.roi_head.bbox_head:
+        #     head.num_classes = 1
+        cfg.model.roi_head.bbox_head.num_classes = 1
+        
+    # general        
+    cfg.classes = ('cots',)
+    cfg.work_dir = str(params['output_dir'])    
+    cfg.seed = 2022
+    
+    # gpu
+    cfg.gpu_ids = range(1)    
+    
+    # data
+    cfg = add_data_pipeline(cfg, params)    
+    
+    cfg.log_config = dict(
+        interval=100,
+        hooks=[
+            dict(type='TextLoggerHook'),
+            dict(type='TensorboardLoggerHook')
+        ])    
+    cfg.runner.max_epochs = params['epochs']
+    cfg.evaluation.interval = 2
+    cfg.evaluation.save_best='auto'
+    cfg.workflow = [('train',1), ("val",1)]
+    
+    logging.info(str(cfg))
+    return cfg
+
+
+def add_data_pipeline(cfg, params):
+    cfg.dataset_type = 'COCODataset'
+    cfg.data_root = str(params['data_path'].resolve())
+    
+    cfg.data.train.type = 'CocoDataset'
+    cfg.data.train.classes = cfg.classes
+    cfg.data.train.ann_file = str(params["cfg_dir"] / 'annotations_train.json')
+    cfg.data.train.img_prefix = cfg.data_root + '/images/'
+
+    cfg.data.test.type = 'CocoDataset'
+    cfg.data.test.classes = cfg.classes
+    cfg.data.test.ann_file = str(params["cfg_dir"] / 'annotations_valid.json')
+    cfg.data.test.img_prefix = cfg.data_root + '/images/'
+
+
+    cfg.data.val.type = 'CocoDataset'
+    cfg.data.val.classes = cfg.classes
+    cfg.data.val.ann_file = str(params["cfg_dir"] / 'annotations_valid.json')
+    cfg.data.val.img_prefix = cfg.data_root + '/images/'    
+    
+    
+    cfg.data.samples_per_gpu = params['batch'] // len(cfg.gpu_ids)
+    cfg.data.workers_per_gpu = params['workers'] // len(cfg.gpu_ids)
+        
+    img_norm_cfg = dict(
+        mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+    
+    train_pipeline = [
+        dict(type='LoadImageFromFile'),
+        dict(type='LoadAnnotations', with_bbox=True),
+        dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
+        dict(type='RandomFlip', flip_ratio=0.5),
+        dict(type='Normalize', **img_norm_cfg),
+        dict(type='Pad', size_divisor=32),
+        dict(type='DefaultFormatBundle'),
+        dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+    ]
+    
+    valid_pipeline =  [
+        dict(type='LoadImageFromFile'),
+        dict(type='LoadAnnotations', with_bbox=True),
+        dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
+        dict(type='Normalize', **img_norm_cfg),
+        dict(type='Pad', size_divisor=32),
+        dict(type='DefaultFormatBundle'),
+        dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+    ]
+
+    test_pipeline = [
+        dict(type='LoadImageFromFile'),
+        dict(
+            type='MultiScaleFlipAug',
+            img_scale=(1333, 800),
+            flip=False,
+            transforms=[
+                dict(type='Resize', keep_ratio=True),
+                dict(type='RandomFlip'),
+                dict(type='Normalize', **img_norm_cfg),
+                dict(type='Pad', size_divisor=32),
+                dict(type='ImageToTensor', keys=['img']),
+                dict(type='Collect', keys=['img'])
+            ])
+    ]    
+    
+
+    cfg.train_pipeline = train_pipeline
+    cfg.val_pipeline = valid_pipeline
+    cfg.test_pipeline = test_pipeline
+
+    cfg.data.train.pipeline = cfg.train_pipeline
+    cfg.data.val.pipeline = cfg.val_pipeline
+    cfg.data.test.pipeline = cfg.test_pipeline 
+    return cfg

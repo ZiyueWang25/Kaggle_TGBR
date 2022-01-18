@@ -2,9 +2,10 @@
 input/
 mmdetection/
 notebook/model_output/
-notebook/yolov5/
+yolov5/
 notebook/FUnIE-GAN/
 notebook/wandb/
+notebook/demo_data/
 output/
 .vscode/
 yolov5s.pt

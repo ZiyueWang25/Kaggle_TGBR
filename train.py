@@ -6,10 +6,17 @@ import time
 import ast 
 import yaml
 import sys
+import json
 import shutil
 import subprocess
 sys.path.append("./src")
 sys.path.append("./notebook/yolov5")
+
+import mmcv
+from mmdet.datasets import build_dataset
+from mmdet.models import build_detector
+from mmdet.apis import train_detector
+from mmdet.apis import inference_detector
 
 import torch
 import pandas as pd
@@ -17,6 +24,7 @@ import numpy as np
 from sklearn.model_selection import GroupKFold, StratifiedGroupKFold
 import util
 import hyp
+import hyp_mm
 
 
 class Pre:
@@ -27,6 +35,7 @@ class Pre:
         logging.debug("prepare_data")
         self.df = pd.read_csv(self.params['root_dir'] / 'train.csv')
         if self.params["debug"]:
+            np.random.seed(2020)
             num_sample = self.df.shape[0] // 10
             self.df = self.df.sample(num_sample)
         self.df = self.df.apply(lambda x: util.get_path(x, self.params), axis=1)
@@ -42,7 +51,7 @@ class Pre:
             fold = self.params["fold"]
             # keep the background in validation fold
             self.df = self.df.query(f"num_bbox>0 or fold == {fold}")
-        if self.params['reduce_nobbox'] > 0:
+        elif self.params['reduce_nobbox'] > 0:
             reduce_nobbox = self.params['reduce_nobbox']
             logging.info(f"reduce_nobbox {reduce_nobbox:.2%}, current size: {self.df.shape[0]}")
             fold = self.params["fold"]
@@ -111,28 +120,38 @@ class Pre:
 
     
     def add_config(self):
-        logging.debug("add_config")
-        with open(self.params["cfg_dir"] / 'train.txt', 'w') as f:
-            for path in self.train_df.image_path.tolist():
-                f.write(str(path.resolve())+'\n')
-        with open(self.params["cfg_dir"] / 'val.txt', 'w') as f:
-            for path in self.valid_df.image_path.tolist():
-                f.write(str(path.resolve())+'\n')
+        if self.params["tools"] == "yolov5":
+            logging.debug("add_config")
+            with open(self.params["cfg_dir"] / 'train.txt', 'w') as f:
+                for path in self.train_df.image_path.tolist():
+                    f.write(str(path.resolve())+'\n')
+            with open(self.params["cfg_dir"] / 'val.txt', 'w') as f:
+                for path in self.valid_df.image_path.tolist():
+                    f.write(str(path.resolve())+'\n')
 
-        data = dict(
-            path = str(self.params["cfg_dir"].resolve()),
-            train = str((self.params["cfg_dir"] / 'train.txt').resolve()),
-            val = str((self.params["cfg_dir"] / 'val.txt').resolve()),
-            nc = 1,
-            names = ['cots'],
-            )
+            data = dict(
+                path = str(self.params["cfg_dir"].resolve()),
+                train = str((self.params["cfg_dir"] / 'train.txt').resolve()),
+                val = str((self.params["cfg_dir"] / 'val.txt').resolve()),
+                nc = 1,
+                names = ['cots'],
+                )
 
-        with open(self.params["cfg_dir"] / 'bgr.yaml', 'w') as outfile:
-            yaml.dump(data, outfile, default_flow_style=False)
+            with open(self.params["cfg_dir"] / 'bgr.yaml', 'w') as outfile:
+                yaml.dump(data, outfile, default_flow_style=False)
 
-        f = open(self.params["cfg_dir"] / 'bgr.yaml', 'r')
-        logging.debug('\nyaml:')
-        logging.debug(f.read())        
+            f = open(self.params["cfg_dir"] / 'bgr.yaml', 'r')
+            logging.debug('\nyaml:')
+            logging.debug(f.read())        
+        else:
+            json_train = util.coco(self.train_df)
+            json_valid = util.coco(self.valid_df)
+            with open(self.params["cfg_dir"] / 'annotations_train.json', 'w', encoding='utf-8') as f:
+                json.dump(json_train, f, ensure_ascii=True, indent=4)
+                
+            with open(self.params["cfg_dir"] / 'annotations_valid.json', 'w', encoding='utf-8') as f:
+                json.dump(json_valid, f, ensure_ascii=True, indent=4)  
+                                  
     
     def create_yolo_format(self):
         logging.debug("create_yolo_format")
@@ -173,18 +192,18 @@ class Pre:
 def parse_args():
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('--project', type=str, default='TGBR')
+    parser.add_argument('--tools', type=str, default='yolov5') # or mmdetection
     parser.add_argument('--exp_name', type=str, default='todo')
     parser.add_argument('--fold', type=int, nargs='+', default=0)        
     parser.add_argument('--data_path', type=str, default="../data/tensorflow-great-barrier-reef/")
     parser.add_argument('--remove_nobbox', action='store_true')
     parser.add_argument('--seed', type=int, default=2022)
-    parser.add_argument("--hyp_name", type=str, default="Base")
     parser.add_argument('--copy_image', action='store_true')
     parser.add_argument('--debug', action="store_true")
     parser.add_argument('--cv_split', type=str, default="subsequence") # subsequence, video_id, sequence
     parser.add_argument('--reduce_nobbox', type=float, default=0)
     
-    
+
     parser.add_argument('--batch', type=int, default=16)
     parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--weights', type=str, default="yolov5s.pt")
@@ -194,6 +213,9 @@ def parse_args():
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')    
     parser.add_argument('--sync-bn', action='store_true', help='use SyncBatchNorm, only available in DDP mode')
 
+    # yolov5
+    parser.add_argument("--hyp_name", type=str, default="Base")
+    
     # for inference
     parser.add_argument("--img_size", type=int, default=1280) # to save exp parameters
     parser.add_argument("--no_train", action="store_true") # to save exp parameters
@@ -209,8 +231,7 @@ def parse_args():
     params['data_path'] = Path(params['data_path']).resolve()
     params['root_dir'] = params['data_path']
     params['image_dir'] = params['data_path'] / 'images'    
-    params['label_dir'] = params['data_path'] / 'labels'
-    
+    params['label_dir'] = params['data_path'] / 'labels'    
     
     if not os.path.exists(params['label_dir']):
         os.makedirs(params['label_dir'])
@@ -228,8 +249,12 @@ def parse_args():
     params['cfg_dir'] = cfg_dir
     params["log_file"] = log_file
     if params["hyp_name"] != "None":
-        params["hyp_param"] = hyp.read_hyp_param(params["hyp_name"])
-        params["hyp_file"] = cfg_dir / "hyp.yaml"
+        if params["tools"] == "yolov5":
+            params["hyp_param"] = hyp.read_hyp_param(params["hyp_name"])
+            params["hyp_file"] = cfg_dir / "hyp.yaml"
+        elif params["tools"] == "mmdetection":
+            params["hyp_param"] = hyp_mm.read_hyp_param(params["hyp_name"])
+            params["hyp_file"] = cfg_dir / "hyp.yaml"
     else:
         params["hyp_file"] = ""
     
@@ -239,36 +264,49 @@ def parse_args():
         os.makedirs(cfg_dir)
     if params["hyp_name"] != "None":
         util.write_hyp(params)
-    util.save_pickle(params, cfg_dir / "params.pkl")
+    util.save_yaml(params, cfg_dir / "params.yaml")
     return params
 
 def call_subprocess(params):
-    script_path = Path("./notebook/yolov5/train.py").resolve()
-    data_path = (params["cfg_dir"] / "bgr.yaml").resolve()
-    input_dir = Path("./input/").resolve()
-    hyp_file = params["hyp_file"].resolve() if params["hyp_file"] != "" else ""
-    logging.debug(str(script_path))
-    logging.debug(str(data_path))
-    logging.debug(str(input_dir))
-    os.chdir(params['output_dir'])
-    args = ["python3", str(script_path), 
-                     "--img", str(params['img_size']),
-                     "--batch", str(params['batch']),
-                     "--data", str(data_path),
-                     "--epochs", str(params['epochs']),
-                     "--weights", str(input_dir / params['weights']),
-                     "--workers", str(params['workers']),
-                     "--patience", str(params['patience']),
-                     "--optimizer", str(params['optimizer']),
-                     "--name", params["exp_name"],
-                     "--project", params["project"],
-                     '--device', params['device'],
-                     ]
-    if hyp_file != "":
-        args.extend(["--hyp", str(hyp_file)])
-    if params["sync_bn"]:
-        args.extend(["--sync-bn"])
-    subprocess.call(args)    
+    if params["tools"] == "yolov5":
+        script_path = Path("./yolov5/train.py").resolve()
+        data_path = (params["cfg_dir"] / "bgr.yaml").resolve()
+        input_dir = Path("./input/").resolve()
+        hyp_file = params["hyp_file"].resolve() if params["hyp_file"] != "" else ""
+        logging.debug(str(script_path))
+        logging.debug(str(data_path))
+        logging.debug(str(input_dir))
+        os.chdir(params['output_dir'])
+        args = ["python3", str(script_path), 
+                        "--img", str(params['img_size']),
+                        "--batch", str(params['batch']),
+                        "--data", str(data_path),
+                        "--epochs", str(params['epochs']),
+                        "--weights", str(input_dir / params['weights']),
+                        "--workers", str(params['workers']),
+                        "--patience", str(params['patience']),
+                        "--optimizer", str(params['optimizer']),
+                        "--name", params["exp_name"],
+                        "--project", params["project"],
+                        '--device', params['device'],
+                        ]
+        if hyp_file != "":
+            args.extend(["--hyp", str(hyp_file)])
+        if params["sync_bn"]:
+            args.extend(["--sync-bn"])
+        subprocess.call(args)    
+    elif params['tools'] == 'mmdetection':
+        print(params['hyp_param'])
+        cfg = util.mmcfg_from_param(params)
+        meta = dict()
+        meta['config'] = cfg.pretty_text
+        datasets = [build_dataset(cfg.data.train), build_dataset(cfg.data.val)]
+        model = build_detector(cfg.model, train_cfg=cfg.get('train_cfg'), test_cfg=cfg.get('test_cfg'))
+        model.init_weights()
+        model.CLASSES = datasets[0].CLASSES
+        mmcv.mkdir_or_exist(os.path.abspath(cfg.work_dir))                        
+        train_detector(model, datasets, cfg, distributed=False, validate=True, meta = meta)   
+             
 
 def main():
     params = parse_args()

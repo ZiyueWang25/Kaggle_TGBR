@@ -79,4 +79,7 @@
 # python3 train.py --exp_name yolov5l_fold3_newBase --fold 3 --batch 8 --hyp_name Base --weights yolov5l.pt --workers 12 --remove_nobbox
 # python3 train.py --exp_name yolov5l_fold4_newBase --fold 4 --batch 8 --hyp_name Base --weights yolov5l.pt --workers 12 --remove_nobbox
 
-python3 train.py --exp_name yolov5l_fold0_4K --img_size 2560 --fold 0 --batch 4 --hyp_name YOLOV5 --weights yolov5l.pt --epochs 15 --optimizer SGD --workers 8 --cv_split video_id  --sync-bn --device 0,1
+#python3 train.py --exp_name yolov5l_fold0_4K --img_size 2560 --fold 0 --batch 4 --hyp_name YOLOV5 --weights yolov5l.pt --epochs 15 --optimizer SGD --workers 8 --cv_split video_id  --sync-bn --device 0,1
+
+
+python3 train.py --exp_name fastrcnn_test --img_size 1280 --fold 0 --batch 4 --tools mmdetection --hyp_name FasterRCNN --epochs 14 --workers 8 --cv_split subsequence --debug

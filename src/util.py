@@ -2,6 +2,7 @@ import sys
 import cv2
 import os
 from ast import literal_eval
+from pathlib import Path
 import shutil
 import logging
 import random
@@ -515,8 +516,14 @@ def load_pickle(folder_path):
     return pickle.load(open(folder_path, 'rb'))
 
 def save_yaml(obj, folder_path):
+    obj2 = obj.copy()
+    for key, value in obj2.items():
+        if isinstance(value, Path):
+            obj2[key] = str(value.resolve())
+        else:
+            obj2[key] = value
     with open(folder_path, 'w') as file:
-        yaml.dump(obj, file)    
+        yaml.dump(obj2, file)    
         
 def load_yaml(folder_path):
     with open(folder_path) as file:
@@ -537,14 +544,30 @@ def load_model(params):
     return model
 
 
-def predict(model, img, size=768, augment=False):
-    height, width = img.shape[:2]
-    results = model(img, size=size, augment=augment)  # custom inference size
-    preds   = results.pandas().xyxy[0]
-    bboxes  = preds[['xmin','ymin','xmax','ymax']].values
+def predict(model, img, size=768, augment=False, use_sahi=False):
+    if use_sahi:
+        from sahi.predict import get_sliced_prediction
+        results = get_sliced_prediction(
+            img,
+            model,
+            slice_height = 512,
+            slice_width = 512,
+            overlap_height_ratio = 0.2,
+            overlap_width_ratio = 0.2
+        ) 
+        preds = results.object_prediction_list
+        bboxes = np.array([pred.bbox.to_voc_bbox() for pred in preds])                
+    else:        
+        results = model(img, size=size, augment=augment)  # custom inference size
+        preds   = results.pandas().xyxy[0]
+        bboxes  = preds[['xmin','ymin','xmax','ymax']].values
     if len(bboxes):
+        height, width = img.shape[:2]
         bboxes  = voc2coco(bboxes,height,width).astype(int)
-        confs   = preds.confidence.values
+        if use_sahi:
+            confs   = np.array([pred.score.value for pred in preds])
+        else:
+            confs   = preds.confidence.values
         return bboxes, confs
     else:
         return np.array([]),[]
@@ -637,33 +660,28 @@ def mmcfg_from_param(params):
     from mmcv import Config
     # model
     cfg = Config.fromfile(params['hyp_param']['base_file'])
+    cfg.work_dir = str(params['output_dir'])
+    cfg.seed = 2022
+    cfg.gpu_ids = range(2)
     cfg.load_from = params['hyp_param']['load_from']    
     if params['hyp_param']['model_type'] == 'faster_rcnn':
         # for head in cfg.model.roi_head.bbox_head:
         #     head.num_classes = 1
         cfg.model.roi_head.bbox_head.num_classes = 1
-        
-    # general        
-    cfg.classes = ('cots',)
-    cfg.work_dir = str(params['output_dir'])    
-    cfg.seed = 2022
-    
-    # gpu
-    cfg.gpu_ids = range(1)    
-    
+
     # data
     cfg = add_data_pipeline(cfg, params)    
     
-    cfg.log_config = dict(
-        interval=100,
-        hooks=[
-            dict(type='TextLoggerHook'),
-            dict(type='TensorboardLoggerHook')
-        ])    
     cfg.runner.max_epochs = params['epochs']
-    cfg.evaluation.interval = 2
+    cfg.evaluation.start = 3
+    cfg.evaluation.interval = 1
     cfg.evaluation.save_best='auto'
-    cfg.workflow = [('train',1)]
+    cfg.evaluation.metric ='bbox'
+    cfg.checkpoint_config.interval = -1
+    cfg.log_config.hooks =[dict(type='TextLoggerHook'),
+            dict(type="WandbLoggerHook"),
+            dict(type='TensorboardLoggerHook')]    
+    cfg.workflow = [('train',1), ("val", 1)]
     
     logging.info(str(cfg))
     return cfg
@@ -671,6 +689,7 @@ def mmcfg_from_param(params):
 
 def add_data_pipeline(cfg, params):
     cfg.dataset_type = 'COCODataset'
+    cfg.classes = ('cots',)
     cfg.data_root = str(params['data_path'].resolve())
     
     cfg.data.train.type = 'CocoDataset'
@@ -689,7 +708,41 @@ def add_data_pipeline(cfg, params):
     cfg.data.val.ann_file = str(params["cfg_dir"] / 'annotations_valid.json')
     cfg.data.val.img_prefix = cfg.data_root + '/images/'    
     
-    
     cfg.data.samples_per_gpu = params['batch'] // len(cfg.gpu_ids)
     cfg.data.workers_per_gpu = params['workers'] // len(cfg.gpu_ids)        
-    return cfg
+    
+    img_norm_cfg = dict(        
+        mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)    
+    
+    train_pipeline = [
+        dict(type='LoadImageFromFile'),
+        dict(type='LoadAnnotations', with_bbox=True),
+        dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
+        dict(type='RandomFlip', flip_ratio=0.5),
+        dict(type='Normalize', **img_norm_cfg),
+        dict(type='Pad', size_divisor=32),
+        dict(type='DefaultFormatBundle'),
+        dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+    ]
+    test_pipeline = [
+        dict(type='LoadImageFromFile'),
+        dict(
+            type='MultiScaleFlipAug',
+            img_scale=(1333, 800),
+            flip=False,
+            transforms=[
+                dict(type='Resize', keep_ratio=True),
+                dict(type='RandomFlip'),
+                dict(type='Normalize', **img_norm_cfg),
+                dict(type='Pad', size_divisor=32),
+                dict(type='ImageToTensor', keys=['img']),
+                dict(type='Collect', keys=['img'])
+            ])
+    ]
+    cfg.train_pipeline = train_pipeline
+    cfg.test_pipeline = test_pipeline
+    cfg.data.train.pipeline = cfg.train_pipeline
+    cfg.data.test.pipeline = cfg.test_pipeline 
+    
+    
+    return cfg    

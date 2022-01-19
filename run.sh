@@ -82,4 +82,18 @@
 #python3 train.py --exp_name yolov5l_fold0_4K --img_size 2560 --fold 0 --batch 4 --hyp_name YOLOV5 --weights yolov5l.pt --epochs 15 --optimizer SGD --workers 8 --cv_split video_id  --sync-bn --device 0,1
 
 
-python3 train.py --exp_name fastrcnn_test --img_size 1280 --fold 0 --batch 4 --tools mmdetection --hyp_name FasterRCNN --epochs 14 --workers 8 --cv_split subsequence --debug
+
+
+# python3 train.py --exp_name fastrcnn_pretrain --img_size 1280 --fold 0 --batch 4 --tools mmdetection --hyp_name FasterRCNN_Pretrain --epochs 15 --workers 8 --cv_split subsequence --remove_nobbox
+
+#python3 train.py --exp_name yolov5l_fold0_new_hyp_remove_1_noClahe --fold 0 --batch 8 --hyp_name MosaicFlipMixUp --weights yolov5l.pt --workers 12 --remove_nobbox
+#python3 train.py --exp_name yolov5l_fold0_new_hyp_remove_1_Clahe --fold 0 --batch 8 --hyp_name MosaicFlipMixUp --weights yolov5l.pt --workers 12 --remove_nobbox --use-clahe
+
+
+# python3 train.py --exp_name fastrcnn --img_size 1280 --fold 0 --batch 4 --tools mmdetection --hyp_name FasterRCNN --epochs 15 --workers 8 --remove_nobbox
+
+python3 train.py --exp_name fastrcnn_pretrain --img_size 1280 --fold 0 --batch 10 --tools mmdetection --hyp_name FasterRCNN_Pretrain --epochs 15 --workers 10 --remove_nobbox
+
+python3 train.py --exp_name fastrcnn_pretrain --img_size 1280 --fold 1 --batch 10 --tools mmdetection --hyp_name FasterRCNN_Pretrain --epochs 15 --workers 10 --remove_nobbox
+
+python3 train.py --exp_name fastrcnn_pretrain --img_size 1280 --fold 2 --batch 10 --tools mmdetection --hyp_name FasterRCNN_Pretrain --epochs 15 --workers 10 --remove_nobbox

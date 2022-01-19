@@ -31,9 +31,6 @@ class Base:
     mixup = 0.2 # image mixup (probability) # 0.0
     copy_paste = 0.0  # segment copy-paste (probability)
 
-class MixUp0(Base):
-    mixup = 0
-
 class YOLOV5(Base):
     hsv_h = 0.015  # image HSV-Hue augmentation (fraction)
     hsv_s = 0.7  # image HSV-Saturation augmentation (fraction)

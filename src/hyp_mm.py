@@ -4,7 +4,9 @@ class FasterRCNN:
     model_type = "faster_rcnn"
     base_file = "faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py"
     load_from = 'checkpoints/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
-    # load_from = 'checkpoints/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth' # pretrained
+
+class FasterRCNN_Pretrain(FasterRCNN):
+    load_from = 'checkpoints/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth' # pretrained
 
     
 def read_hyp_param(name):

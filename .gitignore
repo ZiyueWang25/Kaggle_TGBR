@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
 input/
+wandb/
 mmdetection/
 notebook/model_output/
 yolov5/
@@ -7,6 +8,7 @@ notebook/FUnIE-GAN/
 notebook/wandb/
 notebook/demo_data/
 output/
+output_before0118/
 .vscode/
 yolov5s.pt
 

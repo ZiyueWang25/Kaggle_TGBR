@@ -12,12 +12,6 @@ import subprocess
 sys.path.append("./src")
 sys.path.append("./notebook/yolov5")
 
-import mmcv
-from mmdet.datasets import build_dataset
-from mmdet.models import build_detector
-from mmdet.apis import train_detector
-from mmdet.apis import inference_detector
-
 import torch
 import pandas as pd
 import numpy as np
@@ -141,8 +135,6 @@ class Pre:
                 yaml.dump(data, outfile, default_flow_style=False)
 
             f = open(self.params["cfg_dir"] / 'bgr.yaml', 'r')
-            logging.debug('\nyaml:')
-            logging.debug(f.read())        
         else:
             json_train = util.coco(self.train_df)
             json_valid = util.coco(self.valid_df)
@@ -200,7 +192,7 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=2022)
     parser.add_argument('--copy_image', action='store_true')
     parser.add_argument('--debug', action="store_true")
-    parser.add_argument('--cv_split', type=str, default="subsequence") # subsequence, video_id, sequence
+    parser.add_argument('--cv_split', type=str, default="video_id") # subsequence, video_id, sequence
     parser.add_argument('--reduce_nobbox', type=float, default=0)
     
 
@@ -212,6 +204,8 @@ def parse_args():
     parser.add_argument('--optimizer', type=str, default="AdamW")
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')    
     parser.add_argument('--sync-bn', action='store_true', help='use SyncBatchNorm, only available in DDP mode')
+    parser.add_argument("--use-clahe", action="store_true")
+    
 
     # yolov5
     parser.add_argument("--hyp_name", type=str, default="Base")
@@ -294,19 +288,18 @@ def call_subprocess(params):
             args.extend(["--hyp", str(hyp_file)])
         if params["sync_bn"]:
             args.extend(["--sync-bn"])
-        subprocess.call(args)    
+        if params['use_clahe']:
+            args.extend(["--use-clahe"])
     elif params['tools'] == 'mmdetection':
         print(params['hyp_param'])
         cfg = util.mmcfg_from_param(params)
-        meta = dict()
-        meta['config'] = cfg.pretty_text
-        datasets = [build_dataset(cfg.data.train)] #, build_dataset(cfg.data.val)] # no valid works ok
-        model = build_detector(cfg.model, train_cfg=cfg.get('train_cfg'), test_cfg=cfg.get('test_cfg'))
-        model.init_weights()
-        model.CLASSES = datasets[0].CLASSES
-        mmcv.mkdir_or_exist(os.path.abspath(cfg.work_dir))                        
-        train_detector(model, datasets, cfg, distributed=False, validate=True, meta = meta)   
-             
+        cfg_path = str(params['cfg_dir'] / "config.py")
+        cfg.dump(cfg_path)
+        script_path = str(Path("./mmdetection/tools/dist_train.sh").resolve())
+        args = [str(script_path),
+                        cfg_path,
+                        "2"]                        
+    subprocess.call(args)    
 
 def main():
     params = parse_args()

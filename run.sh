@@ -92,8 +92,35 @@
 
 # python3 train.py --exp_name fastrcnn --img_size 1280 --fold 0 --batch 4 --tools mmdetection --hyp_name FasterRCNN --epochs 15 --workers 8 --remove_nobbox
 
-python3 train.py --exp_name fastrcnn_pretrain --img_size 1280 --fold 0 --batch 10 --tools mmdetection --hyp_name FasterRCNN_Pretrain --epochs 15 --workers 10 --remove_nobbox
+# python3 train.py --exp_name fastrcnn_pretrain --img_size 1280 --fold 0 --batch 10 --tools mmdetection --hyp_name FasterRCNN_Pretrain --epochs 15 --workers 10 --remove_nobbox
 
-python3 train.py --exp_name fastrcnn_pretrain --img_size 1280 --fold 1 --batch 10 --tools mmdetection --hyp_name FasterRCNN_Pretrain --epochs 15 --workers 10 --remove_nobbox
+# python3 train.py --exp_name fastrcnn_pretrain --img_size 1280 --fold 1 --batch 10 --tools mmdetection --hyp_name FasterRCNN_Pretrain --epochs 15 --workers 10 --remove_nobbox
 
-python3 train.py --exp_name fastrcnn_pretrain --img_size 1280 --fold 2 --batch 10 --tools mmdetection --hyp_name FasterRCNN_Pretrain --epochs 15 --workers 10 --remove_nobbox
+# python3 train.py --exp_name fastrcnn_pretrain --img_size 1280 --fold 2 --batch 10 --tools mmdetection --hyp_name FasterRCNN_Pretrain --epochs 15 --workers 10 --remove_nobbox
+
+#python3 train.py --exp_name swin_debug --debug --img_size 1280 --fold 4 --batch 3 --tools mmdetection --hyp_name swin  --epochs 15 --workers 2 --remove_nobbox
+#python3 train.py --exp_name swin --img_size 1280 --fold 4 --batch 2 --tools mmdetection --hyp_name swin  --epochs 15 --workers 4 --remove_nobbox
+#python3 train.py --exp_name frcnn_newlr --fold 4 --batch 10 --tools mmdetection --hyp_name FasterRCNN  --epochs 30 --workers 4 --remove_nobbox
+#python3 train.py --exp_name swin_newlr --fold 4 --batch 2 --tools mmdetection --hyp_name swin  --epochs 15 --workers 4 --remove_nobbox
+
+# python3 train.py --exp_name frcnn_normallr --fold 4 --batch 10 --tools mmdetection --hyp_name FasterRCNN  --epochs 12 --workers 8 --remove_nobbox
+
+#python3 train.py --exp_name frcnn_2 --fold 4 --batch 10 --tools mmdetection --hyp_name FasterRCNN  --epochs 12 --workers 8 --remove_nobbox
+#python3 train.py --exp_name frcnn_giou --fold 4 --batch 10 --tools mmdetection --hyp_name FasterRCNN_GIoU  --epochs 12 --workers 8 --remove_nobbox
+#python3 train.py --exp_name frcnn_giou_softnms --fold 4 --batch 10 --tools mmdetection --hyp_name FasterRCNN_GIoU_softNMS  --epochs 12 --workers 8 --remove_nobbox
+#python3 train.py --exp_name frcnn_giou_softnms_ohem --fold 4 --batch 10 --tools mmdetection --hyp_name FasterRCNN_GIoU_softNMS_OHEM  --epochs 12 --workers 8 --remove_nobbox
+#python3 train.py --exp_name frcnn_albu --fold 4 --batch 10 --tools mmdetection --hyp_name FasterRCNN  --epochs 12 --workers 8 --remove_nobbox
+#python3 train.py --exp_name frcnn_albu5 --fold 4 --batch 6 --tools mmdetection --hyp_name FasterRCNN --aug_name Base5 --workers 6 --remove_nobbox
+#python3 train.py --exp_name frcnn_albu5_newOpt --fold 4 --batch 6 --tools mmdetection --hyp_name FasterRCNN --aug_name Base5 --workers 6 --remove_nobbox
+
+#python3 train.py --exp_name frcnn_albu0_newOpt --fold 4 --batch 6 --tools mmdetection --hyp_name FasterRCNN --aug_name Base5 --workers 6 --remove_nobbox
+
+#python3 train.py --exp_name frcnn_albu5_baseAll --fold 4 --batch 6 --tools mmdetection --hyp_name FasterRCNN_GIoU_softNMS_OHEM --aug_name Base5  --workers 8 --remove_nobbox
+#python3 train.py --exp_name swin2 --fold 4 --batch 2 --tools mmdetection --hyp_name swin2 --aug_name Base --workers 2 --remove_nobbox
+#python3 train.py --exp_name swin --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name Base --workers 2 --remove_nobbox
+#python3 train.py --exp_name swin_base5 --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name Base5 --workers 2 --remove_nobbox
+#python3 train.py --exp_name swin_old --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name Base --workers 2 --remove_nobbox
+python3 train.py --exp_name swin_base5 --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name Base5 --workers 2 --remove_nobbox
+python3 train.py --exp_name swin_base_l --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name Base --workers 2 --remove_nobbox
+python3 train.py --exp_name swin_mosaic --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name BaseMosaic --workers 2 --remove_nobbox
+python3 train.py --exp_name swin_mixup --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name BaseMixUp --workers 2 --remove_nobbox

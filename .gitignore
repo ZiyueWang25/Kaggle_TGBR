@@ -1,5 +1,8 @@
 # Byte-compiled / optimized / DLL files
 input/
+apex/
+Swin-Transformer-Object-Detection/
+TGBR_anjum/
 wandb/
 mmdetection/
 notebook/model_output/
@@ -11,6 +14,7 @@ output/
 output_before0118/
 .vscode/
 yolov5s.pt
+.dist_test/
 
 __pycache__/
 *.py[cod]

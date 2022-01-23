@@ -7,7 +7,7 @@ import ast
 import yaml
 import sys
 import json
-import shutil
+from glob import glob
 import subprocess
 sys.path.append("./src")
 sys.path.append("./notebook/yolov5")
@@ -19,6 +19,7 @@ from sklearn.model_selection import GroupKFold, StratifiedGroupKFold
 import util
 import hyp
 import hyp_mm
+import augmentations
 
 
 class Pre:
@@ -65,7 +66,7 @@ class Pre:
             self.copy_image()
             self.create_yolo_format()
         
-        return 
+        return self.train_df, self.valid_df
     
     def cv_split(self):
         logging.debug("cv_split")   
@@ -94,8 +95,12 @@ class Pre:
             self.df['fold'] = -1
             for fold, (_, val_idx) in enumerate(skf.split(self.df, groups=self.df['sequence'], y=self.df["has_annotations"])):
                 self.df.loc[val_idx, 'fold'] = fold
+        elif split_cri == "custom":
+            folds = pd.read_csv("./input/train_folds_balanced.csv")
+            self.df = pd.merge(self.df, folds[["video_id","video_frame","fold"]], on=["video_id",'video_frame'])
+            self.df = self.df.query("fold != -1")
         else:
-            logging.error(f"{split_cri} not in subsequence, video_id, sequence")
+            logging.error(f"{split_cri} not in subsequence, video_id, sequence, custom")
             
         logging.debug(self.df.fold.value_counts())
         return        
@@ -135,7 +140,7 @@ class Pre:
                 yaml.dump(data, outfile, default_flow_style=False)
 
             f = open(self.params["cfg_dir"] / 'bgr.yaml', 'r')
-        else:
+        elif self.params["tools"] == 'mmdetection':
             json_train = util.coco(self.train_df)
             json_valid = util.coco(self.valid_df)
             with open(self.params["cfg_dir"] / 'annotations_train.json', 'w', encoding='utf-8') as f:
@@ -186,13 +191,13 @@ def parse_args():
     parser.add_argument('--project', type=str, default='TGBR')
     parser.add_argument('--tools', type=str, default='yolov5') # or mmdetection
     parser.add_argument('--exp_name', type=str, default='todo')
-    parser.add_argument('--fold', type=int, nargs='+', default=0)        
+    parser.add_argument('--fold', type=int, nargs='+', default=4)        
     parser.add_argument('--data_path', type=str, default="../data/tensorflow-great-barrier-reef/")
     parser.add_argument('--remove_nobbox', action='store_true')
     parser.add_argument('--seed', type=int, default=2022)
     parser.add_argument('--copy_image', action='store_true')
     parser.add_argument('--debug', action="store_true")
-    parser.add_argument('--cv_split', type=str, default="video_id") # subsequence, video_id, sequence
+    parser.add_argument('--cv_split', type=str, default="custom") # subsequence, video_id, sequence
     parser.add_argument('--reduce_nobbox', type=float, default=0)
     
 
@@ -207,8 +212,8 @@ def parse_args():
     parser.add_argument("--use-clahe", action="store_true")
     
 
-    # yolov5
     parser.add_argument("--hyp_name", type=str, default="Base")
+    parser.add_argument("--aug_name", type=str, default="Base")
     
     # for inference
     parser.add_argument("--img_size", type=int, default=1280) # to save exp parameters
@@ -248,6 +253,7 @@ def parse_args():
             params["hyp_file"] = cfg_dir / "hyp.yaml"
         elif params["tools"] == "mmdetection":
             params["hyp_param"] = hyp_mm.read_hyp_param(params["hyp_name"])
+            params["aug_param"] = augmentations.read_hyp_param(params["aug_name"])
             params["hyp_file"] = cfg_dir / "hyp.yaml"
     else:
         params["hyp_file"] = ""
@@ -261,7 +267,7 @@ def parse_args():
     util.save_yaml(params, cfg_dir / "params.yaml")
     return params
 
-def call_subprocess(params):
+def call_subprocess(params, valid_df):
     if params["tools"] == "yolov5":
         script_path = Path("./yolov5/train.py").resolve()
         data_path = (params["cfg_dir"] / "bgr.yaml").resolve()
@@ -290,16 +296,32 @@ def call_subprocess(params):
             args.extend(["--sync-bn"])
         if params['use_clahe']:
             args.extend(["--use-clahe"])
+        subprocess.call(args)
     elif params['tools'] == 'mmdetection':
-        print(params['hyp_param'])
+        params['aug_param']['img_size'] = params['img_size']
         cfg = util.mmcfg_from_param(params)
         cfg_path = str(params['cfg_dir'] / "config.py")
         cfg.dump(cfg_path)
-        script_path = str(Path("./mmdetection/tools/dist_train.sh").resolve())
-        args = [str(script_path),
-                        cfg_path,
-                        "2"]                        
-    subprocess.call(args)    
+        script_f = params['hyp_param']['script_f']
+        script_path = str(Path(f"./{script_f}/tools/dist_train.sh").resolve())
+        args = [str(script_path), cfg_path, "2"]                        
+        subprocess.call(args)  
+        out_file = str((params['output_dir'] / "test_result.pkl").resolve())
+        if len(glob(str(params['output_dir'] / "best*.pth"))) > 0:
+            ckp_path = glob(str(params['output_dir'] / "best*.pth"))[0]
+            script_path = str(Path(f"./{script_f}/tools/dist_test.sh").resolve())
+            args = [str(script_path),
+                            cfg_path,
+                            ckp_path,
+                            "2",
+                            "--out", out_file,
+                            '--eval', "bbox",
+                            ]           
+            subprocess.call(args)               
+        
+
+        
+            
 
 def main():
     params = parse_args()
@@ -308,8 +330,8 @@ def main():
     if not params["no_train"]:
         torch.backends.cudnn.benchmark = True
         pre = Pre(params)
-        pre.prepare_data()
-        call_subprocess(params)
+        _, valid_df = pre.prepare_data()
+        call_subprocess(params, valid_df)
     if params["upload"]:
         util.upload(params)
 

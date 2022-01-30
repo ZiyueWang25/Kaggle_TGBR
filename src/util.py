@@ -122,7 +122,7 @@ def calc_is_correct_at_iou_th(gt_bboxes, pred_bboxes, iou_th, verbose=False):
     fn = len(gt_bboxes)
     return tp, fp, fn
 
-def calc_is_correct(gt_bboxes, pred_bboxes):
+def calc_is_correct(gt_bboxes, pred_bboxes, iou_th=0.5):
     """
     gt_bboxes: (N, 4) np.array in xywh format
     pred_bboxes: (N, 5) np.array in conf+xywh format
@@ -130,23 +130,22 @@ def calc_is_correct(gt_bboxes, pred_bboxes):
     if len(gt_bboxes) == 0 and len(pred_bboxes) == 0:
         tps, fps, fns = 0, 0, 0
         return tps, fps, fns
-    
+
     elif len(gt_bboxes) == 0:
-        tps, fps, fns = 0, len(pred_bboxes)*11, 0
+        tps, fps, fns = 0, len(pred_bboxes), 0
         return tps, fps, fns
-    
+
     elif len(pred_bboxes) == 0:
-        tps, fps, fns = 0, 0, len(gt_bboxes)*11
+        tps, fps, fns = 0, 0, len(gt_bboxes)
         return tps, fps, fns
-    
+
     pred_bboxes = pred_bboxes[pred_bboxes[:,0].argsort()[::-1]] # sort by conf
-    
+
     tps, fps, fns = 0, 0, 0
-    for iou_th in np.arange(0.3, 0.85, 0.05):
-        tp, fp, fn = calc_is_correct_at_iou_th(gt_bboxes, pred_bboxes, iou_th)
-        tps += tp
-        fps += fp
-        fns += fn
+    tp, fp, fn = calc_is_correct_at_iou_th(gt_bboxes, pred_bboxes, iou_th)
+    tps += tp
+    fps += fp
+    fns += fn
     return tps, fps, fns
 
 def calc_f2_score(gt_bboxes_list, pred_bboxes_list, verbose=False):
@@ -154,18 +153,48 @@ def calc_f2_score(gt_bboxes_list, pred_bboxes_list, verbose=False):
     gt_bboxes_list: list of (N, 4) np.array in xywh format
     pred_bboxes_list: list of (N, 5) np.array in conf+xywh format
     """
-    tps, fps, fns = [], [], []
-    for gt_bboxes, pred_bboxes in zip(gt_bboxes_list, pred_bboxes_list):
-        tp, fp, fn = calc_is_correct(gt_bboxes, pred_bboxes)
-        tps.append(tp)
-        fps.append(fp)
-        fns.append(fn)
-        if verbose:
-            num_gt = len(gt_bboxes)
-            num_pred = len(pred_bboxes)
-            print(f'num_gt:{num_gt:<3} num_pred:{num_pred:<3} tp:{tp:<3} fp:{fp:<3} fn:{fn:<3}')
-    return tps, fps, fns # f_beta(tps, fps, fns, beta=2)
+    #f2s = []
+    f2_dict = {'f2':0, "P":0, "R": 0}
+    all_tps = [list([0] * 11) for _  in range(len(gt_bboxes_list))]
+    all_fps = [list([0] * 11) for _  in range(len(gt_bboxes_list))]
+    all_fns = [list([0] * 11) for _  in range(len(gt_bboxes_list))]
+    for k, iou_th in enumerate(np.arange(0.3, 0.85, 0.05)):
+        tps, fps, fns = 0, 0, 0
+        for i, (gt_bboxes, pred_bboxes) in enumerate(zip(gt_bboxes_list, pred_bboxes_list)):
+            tp, fp, fn = calc_is_correct(gt_bboxes, pred_bboxes, iou_th)
+            tps += tp
+            fps += fp
+            fns += fn
+            all_tps[i][k] = tp
+            all_fps[i][k] = fp
+            all_fns[i][k] = fn
+            if verbose:
+                num_gt = len(gt_bboxes)
+                num_pred = len(pred_bboxes)
+                print(f'num_gt:{num_gt:<3} num_pred:{num_pred:<3} tp:{tp:<3} fp:{fp:<3} fn:{fn:<3}')
+        f2 = f_beta(tps, fps, fns, beta=2)    
+        precision = f_beta(tps, fps, fns, beta=0)
+        recall = f_beta(tps, fps, fns, beta=100)
+        f2_dict["f2_" + str(round(iou_th,3))] = f2
+        f2_dict["P_" + str(round(iou_th,3))] = precision
+        f2_dict["R_" + str(round(iou_th,3))] = recall
+        f2_dict['f2'] += f2 / 11
+        f2_dict['P'] += precision / 11
+        f2_dict['R'] += recall / 11
+    f2_dict["tps"] = all_tps
+    f2_dict["fps"] = all_fps
+    f2_dict["fns"] = all_fns
+    return f2_dict
 
+def print_f2_dict(d):
+    print("Overall f2: {:.3f}, precision {:.3f}, recall {:.3f}".format(d['f2'], d['precision'], d['recall']))
+    for k, iou_th in enumerate(np.arange(0.3, 0.85, 0.05)):
+        print(f"IOU {iou_th:.2f}:", end=" ")
+        print("f2: {:.3f}, precision {:.3f}, recall {:.3f}".format(d["f2_" + str(round(iou_th,3))], 
+                                                                   d["precision_" + str(round(iou_th,3))], 
+                                                                   d["recall_" + str(round(iou_th,3))]))
+        
+    
 
 def get_path(row, params, infer=False):
     row['old_image_path'] = params['root_dir'] / f'train_images/video_{row.video_id}/{row.video_frame}.jpg'
@@ -280,7 +309,7 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=None):
         cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
         
         
-def draw_bboxes(img, bboxes, classes, class_ids, colors = None, show_classes = None, bbox_format = 'yolo', class_name = False, line_thickness = 2):  
+def draw_bboxes(img, bboxes, classes, colors = None, show_classes = None, bbox_format = 'yolo', class_name = False, line_thickness = 1):  
      
     image = img.copy()
     show_classes = classes if show_classes is None else show_classes
@@ -292,9 +321,7 @@ def draw_bboxes(img, bboxes, classes, class_ids, colors = None, show_classes = N
             
             bbox  = bboxes[idx]
             cls   = classes[idx]
-            cls_id = class_ids[idx]
-            color = colors[cls_id] if type(colors) is list else colors
-            
+            color = colors[idx]
             if cls in show_classes:
             
                 x1 = round(float(bbox[0])*image.shape[1])
@@ -315,8 +342,7 @@ def draw_bboxes(img, bboxes, classes, class_ids, colors = None, show_classes = N
             
             bbox  = bboxes[idx]
             cls   = classes[idx]
-            cls_id = class_ids[idx]
-            color = colors[cls_id] if type(colors) is list else colors
+            color = colors[idx]
             
             if cls in show_classes:            
                 x1 = int(round(bbox[0]))
@@ -328,7 +354,7 @@ def draw_bboxes(img, bboxes, classes, class_ids, colors = None, show_classes = N
                 plot_one_box(voc_bbox, 
                              image,
                              color = color,
-                             label = cls if class_name else str(cls_id),
+                             label = cls,
                              line_thickness = line_thickness)
 
     elif bbox_format == 'voc_pascal':
@@ -586,19 +612,17 @@ def format_prediction(bboxes, confs):
         annot = annot.strip(' ')
     return annot
 
-def show_img(img, bboxes, colors, bbox_format='yolo', labels=None):
-    names  = ['starfish']*len(bboxes) if labels is None else ["prediction"] * (len(labels) - sum(labels)) + ["real"] * sum(labels)
-    labels = [0]*len(bboxes) if labels is None else labels
+def show_img(img, bboxes, confs, colors, bbox_format='yolo'):
+    labels = [str(round(conf,2)) for conf in confs]
     img    = draw_bboxes(img = img,
                            bboxes = bboxes, 
-                           classes = names,
-                           class_ids = labels,
+                           classes = labels,
                            class_name = True, 
                            colors = colors, 
                            bbox_format = bbox_format,
                            line_thickness = 2)
 
-    return Image.fromarray(img).resize((800, 400))
+    return Image.fromarray(img)
 
 
 def write_hyp(params):    
@@ -724,19 +748,21 @@ def add_data_pipeline(cfg, params):
     cfg.classes = ('cots',)
     cfg.data_root = str(params['data_path'].resolve())
     cfg.img_scale = params['aug_param']['img_scale']
-    
-    cfg.data.train.type = 'CocoDataset'
+    cfg.dataset_type = 'CocoDataset'
+
+    cfg.data.train.type = cfg.dataset_type
     cfg.data.train.classes = cfg.classes
     cfg.data.train.ann_file = str(params["cfg_dir"] / 'annotations_train.json')
     cfg.data.train.img_prefix = cfg.data_root + '/images/'
 
-    cfg.data.test.type = 'CocoDataset'
+
+    cfg.data.test.type = cfg.dataset_type
     cfg.data.test.classes = cfg.classes
     cfg.data.test.ann_file = str(params["cfg_dir"] / 'annotations_valid.json')
     cfg.data.test.img_prefix = cfg.data_root + '/images/'
 
 
-    cfg.data.val.type = 'CocoDataset'
+    cfg.data.val.type = cfg.dataset_type
     cfg.data.val.classes = cfg.classes
     cfg.data.val.ann_file = str(params["cfg_dir"] / 'annotations_valid.json')
     cfg.data.val.img_prefix = cfg.data_root + '/images/'    
@@ -746,9 +772,13 @@ def add_data_pipeline(cfg, params):
     
     # train pipeline  
     albu_train_transforms = get_albu_transforms(params['aug_param'], is_train=True)
-    train_pipeline = [
-        dict(type='LoadImageFromFile'),
-        dict(type='LoadAnnotations', with_bbox=True)]
+    
+    if params['aug_param']['use_mixup'] or params['aug_param']['use_mosaic']:
+        train_pipeline = []
+    else:
+        train_pipeline = [
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadAnnotations', with_bbox=True)]
     if params['aug_param']['use_mosaic']:
         train_pipeline.append(dict(type='Mosaic', img_scale=cfg.img_scale, pad_val=114.0))
     else:
@@ -806,7 +836,26 @@ def add_data_pipeline(cfg, params):
     
     cfg.train_pipeline = train_pipeline
     cfg.test_pipeline = test_pipeline
-    cfg.data.train.pipeline = cfg.train_pipeline
+    
+    if params['aug_param']['use_mixup'] or params['aug_param']['use_mosaic']:
+        cfg.train_dataset = dict(
+            type='MultiImageMixDataset',
+            dataset=dict(
+                type=cfg.dataset_type,
+                classes=cfg.classes,
+                ann_file=str(params["cfg_dir"] / 'annotations_train.json'),
+                img_prefix=cfg.data_root + '/images/',
+                pipeline=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True)
+                ],
+                filter_empty_gt=False,
+            ),
+            pipeline=cfg.train_pipeline
+        )
+        cfg.data.train = cfg.train_dataset
+    else:
+        cfg.data.train.pipeline = cfg.train_pipeline
     #adding val pipeline like this cannot work
     #cfg.data.val.pipeline = cfg.train_pipeline
     cfg.data.test.pipeline = cfg.test_pipeline 

@@ -21,14 +21,28 @@ class Base5(Base):
     HueSaturationValue = 0.5
     RandomBrightnessContrast = 0.5
     RandomSizedBBoxSafeCrop = 0.5
+class baseFlipRotate(Base):
+    Flip = 0.5
+    RandomRotate90 = 0.5
+class baseFHue(Base):
+    HueSaturationValue = 0.5
+
+class baseFBright(Base):
+    RandomBrightnessContrast = 0.5
+    
+class baseFCrop(Base5):
+    RandomSizedBBoxSafeCrop = 0.5
+
     
 class Base0(Base):
     HorizontalFlip = 0
 
 class BaseMosaic(Base):
+    img_scale = (1280, 720)
     use_mosaic = True
 
 class BaseMixUp(Base):
+    img_scale = (1280, 720)
     use_mixup = True
     
 def read_hyp_param(name):

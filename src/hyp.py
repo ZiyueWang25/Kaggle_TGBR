@@ -1,18 +1,18 @@
 import util
 
 class Base:
-    lr0 = 8e-4  # initial learning rate (SGD=1E-2, Adam=1E-3)
+    lr0 = 1e-3  # initial learning rate (SGD=1E-2, Adam=1E-3)
     lrf = 0.2  # final OneCycleLR learning rate (lr0 * lrf), # 0.2
     momentum = 0.937  # SGD momentum/Adam beta1
     weight_decay = 0.0005  # optimizer weight decay 5e-4
     warmup_epochs = 3  # warmup epochs (fractions ok)
     warmup_momentum = 0.8  # warmup initial momentum
-    warmup_bias_lr = 0.1  # warmup initial bias lr ?
+    warmup_bias_lr = 0.1  # warmup initial bias lr 
     box = 0.05  # box loss gain ?
     cls = 0.5  # cls loss gain ?
-    cls_pw = 1.0  # cls BCELoss positive_weight ?
+    cls_pw = 1.0  # cls BCELoss positive_weight 
     obj = 1.0  # obj loss gain (scale with pixels) ?
-    obj_pw = 1.0  # obj BCELoss positive_weight ?
+    obj_pw = 1.0  # obj BCELoss positive_weight 
     iou_t = 0.20  # IoU training threshold ?
     anchor_t = 4.0  # anchor-multiple threshold
     # anchors = 3  # anchors per output layer (0 to ignore)
@@ -45,6 +45,15 @@ class YOLOV5(Base):
     mosaic = 1.0  # image mosaic (probability)
     mixup = 0.2  # image mixup (probability)
     copy_paste = 0.0  # segment copy-paste (probability)
+    
+class sheep(YOLOV5):
+    lr0 = 0.01
+    lrf = 0.1
+    mixup = 0.5
+    
+class YOLOV5_B4(Base):
+    lr0 = 6e-4
+    
     
 def read_hyp_param(name):
     assert name in globals(), "name is not in " + str(globals())

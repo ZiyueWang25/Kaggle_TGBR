@@ -1,4 +1,5 @@
 # Byte-compiled / optimized / DLL files
+JSON2YOLO/
 input/
 apex/
 Swin-Transformer-Object-Detection/
@@ -6,6 +7,9 @@ TGBR_anjum/
 wandb/
 mmdetection/
 notebook/model_output/
+notebook/pic_check/
+notebook/*.pkl
+notebook/*.jpg
 yolov5/
 notebook/FUnIE-GAN/
 notebook/wandb/

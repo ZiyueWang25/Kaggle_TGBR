@@ -120,7 +120,150 @@
 #python3 train.py --exp_name swin --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name Base --workers 2 --remove_nobbox
 #python3 train.py --exp_name swin_base5 --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name Base5 --workers 2 --remove_nobbox
 #python3 train.py --exp_name swin_old --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name Base --workers 2 --remove_nobbox
-python3 train.py --exp_name swin_base5 --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name Base5 --workers 2 --remove_nobbox
-python3 train.py --exp_name swin_base_l --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name Base --workers 2 --remove_nobbox
-python3 train.py --exp_name swin_mosaic --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name BaseMosaic --workers 2 --remove_nobbox
-python3 train.py --exp_name swin_mixup --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name BaseMixUp --workers 2 --remove_nobbox
+#python3 train.py --exp_name swin_base5 --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name Base5 --workers 2 --remove_nobbox
+# python3 train.py --exp_name swin_mosaic_debug --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name BaseMosaic --workers 2 --remove_nobbox --debug
+# python3 train.py --exp_name fasterrcnn_mosaic_debug --fold 4 --batch 2 --tools mmdetection --hyp_name FasterRCNN --aug_name BaseMosaic --workers 2 --remove_nobbox --debug
+# python3 train.py --exp_name swin_mixup_debug --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name BaseMixUp --workers 2 --remove_nobbox --debug
+#python3 train.py --exp_name swin_base_l --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name Base --workers 2 --remove_nobbox
+
+# python3 train.py --exp_name swin_baseFlipRotate --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name baseFlipRotate --workers 2 --remove_nobbox
+# python3 train.py --exp_name swin_baseFRHue --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name baseFRHue --workers 2 --remove_nobbox
+# python3 train.py --exp_name swin_base_l --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name Base --workers 2 --remove_nobbox
+# python3 train.py --exp_name swin_baseFCrop --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name baseFCrop --workers 2 --remove_nobbox
+# python3 train.py --exp_name swin_baseFHue --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name baseFHue --workers 2 --remove_nobbox
+# python3 train.py --exp_name swin_baseFBright --fold 4 --batch 2 --tools mmdetection --hyp_name swin --aug_name baseFBright --workers 2 --remove_nobbox
+
+#python3 train.py --exp_name yolov5s --img_size 1280 --fold 4 --batch 16 --epochs 30 --hyp_name YOLOV5 --weights yolov5s.pt --workers 8 --remove_nobbox --no_train --upload
+# python3 train.py --exp_name yolov5s_cont3 --fold 4 --batch 16 --hyp_name YOLOV5\
+#  --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0123_yolov5s/TGBR/0123_yolov5s/weights/best.pt\
+#  --workers 8 --remove_nobbox
+
+# python3 train.py --exp_name yolov5s_pw1d5 --fold 4 --batch 16 --hyp_name pw1d5 --weights yolov5s.pt --workers 8 --remove_nobbox
+# python3 train.py --exp_name yolov5s_pw2 --fold 4 --batch 16 --hyp_name pw2 --weights yolov5s.pt --workers 8 --remove_nobbox
+# python3 train.py --exp_name yolov5s_pw3 --fold 4 --batch 16 --hyp_name pw3 --weights yolov5s.pt --workers 8 --remove_nobbox
+# python3 train.py --exp_name yolov5s_fc0d5 --fold 4 --batch 16 --hyp_name fc0d5 --weights yolov5s.pt --workers 8 --remove_nobbox
+# python3 train.py --exp_name yolov5s_fc1 --fold 4 --batch 16 --hyp_name fc1 --weights yolov5s.pt --workers 8 --remove_nobbox
+# python3 train.py --exp_name yolov5s_fc1d5 --fold 4 --batch 16 --hyp_name fc1d5 --weights yolov5s.pt --workers 8 --remove_nobbox
+# python3 train.py --exp_name yolov5s_ms --multi-scale --fold 4 --batch 12 --hyp_name YOLOV5 --weights yolov5s.pt --workers 6 --remove_nobbox
+# python3 train.py --exp_name yolov5s_pw1d2 --fold 4 --batch 16 --hyp_name pw1d2 --weights yolov5s.pt --workers 8 --remove_nobbox
+# python3 train.py --exp_name yolov5s_pw0d8 --fold 4 --batch 16 --hyp_name pw0d8 --weights yolov5s.pt --workers 8 --remove_nobbox
+# python3 train.py --exp_name yolov5s_ep50 --fold 4 --epoch 50 --batch 16 --hyp_name YOLOV5 --weights yolov5s.pt --workers 8 --remove_nobbox
+
+#python3 train.py --exp_name yolov5l_lr5e4 --fold 4 --batch 8 --hyp_name lr5e4 --weights yolov5l.pt --workers 6 --remove_nobbox
+#python3 train.py --exp_name yolov5l_lr1e3 --fold 4 --batch 8 --hyp_name lr1e3 --weights yolov5l.pt --workers 6 --remove_nobbox
+
+#python3 train.py --exp_name yolov5s_pre2 --img_size 768 --batch 64 --hyp_name YOLOV5 --weights yolov5s.pt --workers 12 \
+#--pretrain --data_path ../data/DUO/ --debug --use-f2 False
+
+# python3 train.py --exp_name yolov5s_wpre --fold 4 --batch 16 --hyp_name YOLOV5 \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0124_yolov5s_pre2/TGBR/0124_yolov5s_pre24/weights/best.pt \
+# --workers 8 --remove_nobbox
+
+# python3 train.py --exp_name yolov5s_lr1e3 --fold 4 --batch 16 --hyp_name YOLOV5 --weights yolov5s.pt --workers 8 --remove_nobbox
+# python3 train.py --exp_name yolov5s_lr1e3_plain --fold 4 --batch 16 --hyp_name YOLOV5 --weights "" --cfg yolov5s.yaml --workers 8 --remove_nobbox
+
+# python3 train.py --exp_name yolov5s6 --fold 4 --batch 16 --hyp_name YOLOV5 --weights yolov5s6.pt --workers 8 --remove_nobbox
+# python3 train.py --exp_name yolov5l6 --fold 4 --batch 6 --hyp_name YOLOV5 --weights yolov5l6.pt --workers 4 --remove_nobbox
+
+# python3 train.py --exp_name yolov5s_f0 --fold 0 --batch 16 --hyp_name YOLOV5 --weights yolov5s.pt --workers 8 --remove_nobbox
+# python3 train.py --exp_name yolov5s_f1 --fold 1 --batch 16 --hyp_name YOLOV5 --weights yolov5s.pt --workers 8 --remove_nobbox
+# python3 train.py --exp_name yolov5s_f2 --fold 2 --batch 16 --hyp_name YOLOV5 --weights yolov5s.pt --workers 8 --remove_nobbox
+# python3 train.py --exp_name yolov5s_f3 --fold 3 --batch 16 --hyp_name YOLOV5 --weights yolov5s.pt --workers 8 --remove_nobbox
+
+# python3 train.py --exp_name yolov5l_pre --img_size 768 --batch 24 --hyp_name YOLOV5 --weights yolov5l.pt --workers 12 \
+# --pretrain --data_path ../data/DUO/ --debug --use-f2 False
+
+# python3 train.py --exp_name yolov5l_wpre_f4 --fold 4 --batch 8 --hyp_name YOLOV5 \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0125_yolov5l_pre/TGBR/0125_yolov5l_pre5/weights/best.pt \
+# --workers 6
+
+# python3 train.py --exp_name yolov5l_wpre_f0 --fold 0 --batch 8 --hyp_name YOLOV5 \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0125_yolov5l_pre/TGBR/0125_yolov5l_pre5/weights/best.pt \
+# --workers 6
+
+# python3 train.py --exp_name yolov5l_wpre_f1 --fold 1 --batch 8 --hyp_name YOLOV5 \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0125_yolov5l_pre/TGBR/0125_yolov5l_pre5/weights/best.pt \
+# --workers 6
+
+
+# python3 train.py --exp_name yolov5s_f0_cpf --fold 0 --batch 16 --hyp_name YOLOV5 --weights yolov5s.pt --workers 8 --use-CPF-fold
+# python3 train.py --exp_name yolov5s_f1_cpf --fold 1 --batch 16 --hyp_name YOLOV5 --weights yolov5s.pt --workers 8 --use-CPF-fold
+# python3 train.py --exp_name yolov5s_f2_cpf --fold 2 --batch 16 --hyp_name YOLOV5 --weights yolov5s.pt --workers 8 --use-CPF-fold
+# python3 train.py --exp_name yolov5s_f3_cpf --fold 3 --batch 16 --hyp_name YOLOV5 --weights yolov5s.pt --workers 8 --use-CPF-fold
+# python3 train.py --exp_name yolov5s_f4_cpf --fold 4 --batch 16 --hyp_name YOLOV5 --weights yolov5s.pt --workers 8 --use-CPF-fold
+
+
+# python3 train.py --exp_name yolov5l_wpre_f2 --fold 2 --batch 8 --hyp_name YOLOV5 \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0125_yolov5l_pre/TGBR/0125_yolov5l_pre5/weights/best.pt \
+# --workers 6
+
+# python3 train.py --exp_name yolov5l_wpre_f3 --fold 3 --batch 8 --hyp_name YOLOV5 \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0125_yolov5l_pre/TGBR/0125_yolov5l_pre5/weights/best.pt \
+# --workers 6
+
+
+# python3 train.py --exp_name yolov5l_wpre_v0 --fold 0 --batch 8 --hyp_name YOLOV5 --cv_split video_id \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0125_yolov5l_pre/TGBR/0125_yolov5l_pre5/weights/best.pt \
+# --workers 6
+# python3 train.py --exp_name yolov5l_wpre_v1 --fold 1 --batch 8 --hyp_name YOLOV5 --cv_split video_id \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0125_yolov5l_pre/TGBR/0125_yolov5l_pre5/weights/best.pt \
+# --workers 6
+# python3 train.py --exp_name yolov5l_wpre_v2 --fold 2 --batch 8 --hyp_name YOLOV5 --cv_split video_id \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0125_yolov5l_pre/TGBR/0125_yolov5l_pre5/weights/best.pt \
+# --workers 6
+
+
+# python3 train.py --exp_name yolov5l_wpre_v0_FP --fold 0 --batch 8 --hyp_name YOLOV5 --cv_split video_id \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0125_yolov5l_pre/TGBR/0125_yolov5l_pre5/weights/best.pt \
+# --workers 6 --keep-highFP
+# python3 train.py --exp_name yolov5l_wpre_v1_FP --fold 1 --batch 8 --hyp_name YOLOV5 --cv_split video_id \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0125_yolov5l_pre/TGBR/0125_yolov5l_pre5/weights/best.pt \
+# --workers 6 --keep-highFP
+# python3 train.py --exp_name yolov5l_wpre_v2_FP --fold 2 --batch 8 --hyp_name YOLOV5 --cv_split video_id \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0125_yolov5l_pre/TGBR/0125_yolov5l_pre5/weights/best.pt \
+# --workers 6 --keep-highFP
+
+# python3 train.py --exp_name yolov5l_v2 --cv_split v2 --batch 8 --hyp_name YOLOV5 --weights yolov5l.pt --workers 6 --debug --keep-highFP
+
+
+#python3 train.py --exp_name yolov5l_v2 --cv_split v2 --batch 8 --hyp_name YOLOV5 --weights yolov5l.pt --workers 6
+#python3 train.py --exp_name yolov5l_v2_test_debug --cv_split v2 --batch 8 --hyp_name YOLOV5 --workers 6 --whole_run \
+#--weights /home/vincent/Kaggle/Kaggle_TGBR/output/0127_yolov5l_v2/TGBR/0127_yolov5l_v2/weights/best.pt --patience 3 --keep_nobbox --debug
+# python3 train.py --exp_name yolov5l_v2_test_highFP --cv_split v2 --batch 8 --hyp_name YOLOV5 --workers 6 --whole_run \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0127_yolov5l_v2/TGBR/0127_yolov5l_v2/weights/best.pt --patience 3 --keep-highFP
+# python3 train.py --exp_name yolov5l_v2_test_allData --cv_split v2 --batch 8 --hyp_name YOLOV5 --workers 6 --whole_run \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0127_yolov5l_v2/TGBR/0127_yolov5l_v2/weights/best.pt --patience 3 --keep_nobbox  --keep-highFP
+
+# python3 train.py --exp_name yolov5l_v2_FP --cv_split v2 --batch 8 --hyp_name YOLOV5 --weights yolov5l.pt --workers 6 --keep-highFP
+# python3 train.py --exp_name yolov5l_v2_FP_test_allData --cv_split v2 --batch 8 --hyp_name YOLOV5 --workers 6 --whole_run \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0128_yolov5l_v2_FP/TGBR/0128_yolov5l_v2_FP/weights/best.pt --patience 3 --keep_nobbox --keep-highFP
+# python3 train.py --exp_name yolov5l_v2_FP_test_highFP --cv_split v2 --batch 8 --hyp_name YOLOV5 --workers 6 --whole_run \
+# --weights /home/vincent/Kaggle/Kaggle_TGBR/output/0128_yolov5l_v2_FP/TGBR/0128_yolov5l_v2_FP/weights/best.pt --patience 3 --keep-highFP
+
+#python3 train.py --exp_name yolov5l_v3 --cv_split v2 --batch 8 --hyp_name YOLOV5 --weights yolov5l.pt --workers 6
+#python3 train.py --exp_name yolov5l_v3_highFP --cv_split v2 --batch 8 --hyp_name YOLOV5 --weights yolov5l.pt --workers 6 --keep-highFP
+
+# python3 train.py --exp_name yolov5l_v3_highFP_1920_debug --cv_split v2 --img_size 1800 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5l.pt --workers 6 --keep-highFP --debug
+
+#python3 train.py --exp_name yolov5l_v3_highFP_whole --cv_split v2 --batch 8 --hyp_name YOLOV5 --weights yolov5l.pt --workers 6 --keep-highFP --whole_run
+#python3 train.py --exp_name yolov5l_v3_highFP_1800 --cv_split v2 --img_size 1800 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5l.pt --workers 6 --keep-highFP
+#python3 train.py --exp_name yolov5l_v3_highFP_clahe --cv_split v2 --batch 8 --hyp_name YOLOV5 --weights yolov5l.pt --workers 6 --keep-highFP --use-clahe
+# python3 train.py --exp_name yolov5l_v3_highFP_1800_e11 --cv_split v2 --img_size 1800 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5l.pt --workers 6 --keep-highFP --epochs 11
+# python3 train.py --exp_name yolov5l_v3_highFP_1800_e11_whole --cv_split v2 --img_size 1800 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5l.pt --workers 6 --keep-highFP --epochs 11 --whole_run
+
+# python3 train.py --exp_name yolov5l_v3_1800_clahe_rect_debug --cv_split v2 --img_size 2400 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5l.pt --workers 6 --keep-highFP --epochs 11 --use_clahe --rect --debug
+# python3 train.py --exp_name yolov5l6_debug --cv_split v2 --img_size 1280 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5l6.pt --workers 6 --keep-highFP --use_clahe --epochs 11 --rect
+
+# python3 train.py --exp_name yolov5l_v3_1800_clahe_whole --cv_split v2 --img_size 1800 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5l.pt --workers 6 --keep-highFP --epochs 11 --use_clahe --whole_run
+
+
+#python3 train.py --exp_name yolov5l_2400_clahe_rect --cv_split v2 --img_size 2400 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5l.pt --workers 6 --keep-highFP --epochs 11 --use_clahe --rect
+#python3 train.py --exp_name yolov5m6_2300 --cv_split v2 --img_size 2300 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5m6.pt --workers 6 --keep-highFP --use_clahe --epochs 11
+python3 train.py --exp_name yolov5m6_2300_whole --cv_split v2 --img_size 2300 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5m6.pt --workers 6 --keep-highFP --use_clahe --epochs 11 --whole_run
+# python3 train.py --exp_name yolov5m6_3000_rect --cv_split v2 --img_size 3000 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5m6.pt --workers 6 --keep-highFP --use_clahe --epochs 11 --rect
+#python3 train.py --exp_name yolov5l_2400_clahe_rect_whole --cv_split v2 --img_size 2400 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5l.pt --workers 6 --keep-highFP --epochs 12 --use_clahe --rect --whole_run
+
+# python3 train.py --exp_name yolov5m6_rect_debug --cv_split v2 --img_size 3000 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5m6.pt --workers 6 --keep-highFP --use_clahe --epochs 11 --rect --debug
+
+
+# python3 train.py --exp_name yolov5l_v3_1800_clahe_e16_whole --cv_split v2 --img_size 1800 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5l.pt --workers 6 --keep-highFP --epochs 15 --use_clahe --whole_run

@@ -227,6 +227,8 @@ def parse_args():
     parser.add_argument("--rect", action="store_true")    
 
     parser.add_argument("--pretrain", action="store_true")    
+    parser.add_argument("--sliced", action="store_true")    
+    
 
     parser.add_argument('--batch', type=int, default=16)
     parser.add_argument('--epochs', type=int, default=30)
@@ -238,6 +240,8 @@ def parse_args():
     parser.add_argument('--sync-bn', action='store_true', help='use SyncBatchNorm, only available in DDP mode')
     parser.add_argument("--use_clahe", action="store_true")
     parser.add_argument("--use-f2", default=True, type=bool)
+    parser.add_argument('--score_thres', type=float, default=0.1)
+    
     parser.add_argument("--multi-scale", action="store_true")
     
 
@@ -323,6 +327,7 @@ def call_subprocess(params):
                         "--name", params["exp_name"],
                         "--project", params["project"],
                         '--device', params['device'],
+                        '--score_thres', str(params['score_thres']),
                         ]
         if hyp_file != "":
             args.extend(["--hyp", str(hyp_file)])
@@ -336,6 +341,7 @@ def call_subprocess(params):
             args.extend(["--use-f2"])  
         if params['whole_run']:          
             args.extend(["--noval"])  
+            args.extend(["--nosave"])  
         if params['rect']:          
             args.extend(["--rect"])  
         subprocess.call(args)
@@ -345,21 +351,25 @@ def call_subprocess(params):
         cfg_path = str(params['cfg_dir'] / "config.py")
         cfg.dump(cfg_path)
         script_f = params['hyp_param']['script_f']
-        script_path = str(Path(f"./{script_f}/tools/dist_train.sh").resolve())
+        if params['whole_run']:
+            script_path = str(Path(f"./{script_f}/tools/dist_train_wholeRun.sh").resolve())
+        else:
+            script_path = str(Path(f"./{script_f}/tools/dist_train.sh").resolve())
         args = [str(script_path), cfg_path, "2"]                        
         subprocess.call(args)  
-        out_file = str((params['output_dir'] / "test_result.pkl").resolve())
-        if len(glob(str(params['output_dir'] / "best*.pth"))) > 0:
-            ckp_path = glob(str(params['output_dir'] / "best*.pth"))[0]
-            script_path = str(Path(f"./{script_f}/tools/dist_test.sh").resolve())
-            args = [str(script_path),
-                            cfg_path,
-                            ckp_path,
-                            "2",
-                            "--out", out_file,
-                            '--eval', "bbox",
-                            ]           
-            subprocess.call(args)               
+        if not params['whole_run']:
+            out_file = str((params['output_dir'] / "test_result.pkl").resolve())
+            if len(glob(str(params['output_dir'] / "best*.pth"))) > 0:
+                ckp_path = glob(str(params['output_dir'] / "best*.pth"))[0]
+                script_path = str(Path(f"./{script_f}/tools/dist_test.sh").resolve())
+                args = [str(script_path),
+                                cfg_path,
+                                ckp_path,
+                                "2",
+                                "--out", out_file,
+                                '--eval', "bbox",
+                                ]           
+                subprocess.call(args)               
         
 
         
@@ -371,9 +381,22 @@ def main():
     print("\nLOGGING TO: ", params['log_file'], "\n")
     if not params["no_train"]:
         torch.backends.cudnn.benchmark = True
-        if not params["pretrain"]:
+        if not params["pretrain"] and not params['sliced']:
             pre = Pre(params)
             pre.prepare_data()
+        elif params['sliced']:
+            data = dict(
+                train = str((params["image_dir"] / 'train').resolve()),
+                val = str((params["image_dir"] / 'test').resolve()),
+                nc = 1,
+                names = ['cots'],
+                )
+            if params['whole_run']:
+                data['val'] = data['train']
+
+            with open(params["cfg_dir"] / 'bgr.yaml', 'w') as outfile:
+                yaml.dump(data, outfile, default_flow_style=False)
+            
         else:
             data = dict(
                 train = str((params["image_dir"] / 'train').resolve()),
@@ -384,7 +407,8 @@ def main():
 
             with open(params["cfg_dir"] / 'bgr.yaml', 'w') as outfile:
                 yaml.dump(data, outfile, default_flow_style=False)
-            
+        call_subprocess(params)
+    elif params['test']:
         call_subprocess(params)
     if params["upload"]:
         util.upload(params)

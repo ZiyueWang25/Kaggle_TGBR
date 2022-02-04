@@ -2,15 +2,15 @@ import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 import util
 
-class Base:
-    img_scale = (1664, 936) #(1280, 720), (1408, 792), (1536, 864), (1664, 936)
-    
+class Base:    
     HorizontalFlip = 0.5
     Flip = 0
     RandomRotate90 = 0
     HueSaturationValue = 0
     RandomBrightnessContrast = 0
     RandomSizedBBoxSafeCrop = 0
+    Equalize = 0
+    CLAHE = 0
     use_mosaic = False
     use_mixup = False
 
@@ -18,6 +18,7 @@ class Base5(Base):
     HorizontalFlip = 0.5
     Flip = 0.5
     RandomRotate90 = 0.5
+    CLAHE = 0.5
     HueSaturationValue = 0.5
     RandomBrightnessContrast = 0.5
     RandomSizedBBoxSafeCrop = 0.5
@@ -38,11 +39,9 @@ class Base0(Base):
     HorizontalFlip = 0
 
 class BaseMosaic(Base):
-    img_scale = (1280, 720)
     use_mosaic = True
 
 class BaseMixUp(Base):
-    img_scale = (1280, 720)
     use_mixup = True
     
 def read_hyp_param(name):
@@ -58,7 +57,11 @@ def get_albu_transforms(aug_param, is_train=True):
     if aug_param.get("HorizontalFlip", 0) > 0:
         aug_list.append(A.HorizontalFlip(p=aug_param["HorizontalFlip"]))
     if aug_param.get("Flip", 0) > 0:
-        aug_list.append(A.HorizontalFlip(p=aug_param["Flip"]))
+        aug_list.append(A.Flip(p=aug_param["Flip"]))
+    if aug_param.get('Equalize', 0) > 0:
+        aug_list.append(A.Equalize(p=aug_param["Equalize"]))        
+    if aug_param.get("CLAHE", 0) > 0:
+        aug_list.append(A.CLAHE(p=aug_param["CLAHE"]))
     if aug_param.get("HueSaturationValue", 0) > 0:
         aug_list.append(A.HueSaturationValue(p=aug_param["HueSaturationValue"])) 
     if aug_param.get("RandomBrightnessContrast", 0) > 0:

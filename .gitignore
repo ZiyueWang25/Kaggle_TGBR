@@ -1,6 +1,8 @@
 # Byte-compiled / optimized / DLL files
 JSON2YOLO/
-input/
+input/*.pt
+input/key.txt
+
 apex/
 Swin-Transformer-Object-Detection/
 TGBR_anjum/
@@ -13,6 +15,8 @@ notebook/*.jpg
 yolov5/
 notebook/FUnIE-GAN/
 notebook/wandb/
+notebook/new_dir/
+sahi/
 notebook/demo_data/
 output/
 output_before0118/

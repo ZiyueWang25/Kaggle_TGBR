@@ -712,32 +712,49 @@ def mmcfg_from_param(params):
         cfg.model.test_cfg.rcnn.nms.type = params['hyp_param']['nms']
         
         cfg.model.train_cfg.rcnn.sampler.type = params['hyp_param']['sampler']
-        # LR
-        cfg.optimizer.lr  = params['hyp_param']['lr']
-        cfg.lr_config = dict(
-                policy='CosineAnnealing', 
-                by_epoch=False,
-                warmup='linear', 
-                warmup_iters= 1000, 
-                warmup_ratio= 1/10,
-                min_lr=1e-07)    
         
     elif params['hyp_param']['model_type'] == 'swin':        
         pass # already changed
-                
+    elif params['hyp_param']['model_type'] == 'vfnet':
+        cfg.model.bbox_head.num_classes = 1
 
+    if params['hyp_param'].get("optimizer", cfg.optimizer.type) == "AdamW":
+        cfg.optimizer = dict(
+            type="AdamW",
+            lr=params['hyp_param'].get("lr", cfg.optimizer.lr),
+            weight_decay=params['hyp_param'].get(
+                "weight_decay", cfg.optimizer.weight_decay
+            ),
+        )
+    else:
+        cfg.optimizer.lr = params['hyp_param'].get("lr", cfg.optimizer.lr)
+        cfg.optimizer.weight_decay = params['hyp_param'].get(
+                "weight_decay", cfg.optimizer.weight_decay)
+    cfg.lr_config = dict(
+            policy='CosineAnnealing', 
+            by_epoch=False,
+            warmup='linear', 
+            warmup_iters= 1000, 
+            warmup_ratio= 1/10,
+            min_lr=1e-07)    
+    
     # data
     cfg = add_data_pipeline(cfg, params)   
         
+    cfg.runner.max_epochs = params['epochs']
     cfg.evaluation.start = 1
     cfg.evaluation.interval = 1
     cfg.evaluation.save_best='auto'
     cfg.evaluation.metric ='bbox'
     
     cfg.checkpoint_config.interval = -1
+    cfg.log_config.interval = 500
+    cfg.log_config.with_step = True
+    cfg.log_config.by_epoch = True
+    
     cfg.log_config.hooks =[dict(type='TextLoggerHook'),
                            dict(type='TensorboardLoggerHook')]    
-    cfg.workflow = [('train',1), ("val", 1)]
+    cfg.workflow = [('train',1)]
     
     logging.info(str(cfg))
     return cfg
@@ -747,25 +764,29 @@ def add_data_pipeline(cfg, params):
     cfg.dataset_type = 'COCODataset'
     cfg.classes = ('cots',)
     cfg.data_root = str(params['data_path'].resolve())
+    params['aug_param']['img_scale'] = (params['img_size'], params['img_size'])
     cfg.img_scale = params['aug_param']['img_scale']
     cfg.dataset_type = 'CocoDataset'
+    cfg.filter_empty_gt = False
+    cfg.data.filter_empty_gt = False
 
     cfg.data.train.type = cfg.dataset_type
     cfg.data.train.classes = cfg.classes
     cfg.data.train.ann_file = str(params["cfg_dir"] / 'annotations_train.json')
     cfg.data.train.img_prefix = cfg.data_root + '/images/'
-
+    cfg.data.train.filter_empty_gt = False
 
     cfg.data.test.type = cfg.dataset_type
     cfg.data.test.classes = cfg.classes
     cfg.data.test.ann_file = str(params["cfg_dir"] / 'annotations_valid.json')
     cfg.data.test.img_prefix = cfg.data_root + '/images/'
-
+    cfg.data.test.filter_empty_gt = False
 
     cfg.data.val.type = cfg.dataset_type
     cfg.data.val.classes = cfg.classes
     cfg.data.val.ann_file = str(params["cfg_dir"] / 'annotations_valid.json')
     cfg.data.val.img_prefix = cfg.data_root + '/images/'    
+    cfg.data.val.filter_empty_gt = False
     
     cfg.data.samples_per_gpu = params['batch'] // len(cfg.gpu_ids)
     cfg.data.workers_per_gpu = params['workers'] // len(cfg.gpu_ids)        
@@ -782,7 +803,7 @@ def add_data_pipeline(cfg, params):
     if params['aug_param']['use_mosaic']:
         train_pipeline.append(dict(type='Mosaic', img_scale=cfg.img_scale, pad_val=114.0))
     else:
-        train_pipeline.append(dict(type='Resize', img_scale=cfg.img_scale, keep_ratio=True))
+        train_pipeline.append(dict(type='Resize', img_scale=cfg.img_scale, keep_ratio=False))
         
     train_pipeline = train_pipeline +[
         dict(type='Pad', size_divisor=32),
@@ -800,7 +821,7 @@ def add_data_pipeline(cfg, params):
                 'gt_bboxes': 'bboxes'
             },
             update_pad_shape=False,
-            skip_img_without_anno=True
+            skip_img_without_anno=False
         )]
     
     if params['aug_param']['use_mixup']:
@@ -816,14 +837,30 @@ def add_data_pipeline(cfg, params):
                         'scale_factor', 'img_norm_cfg')),
     ]
         
+    val_pipeline = [
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=cfg.img_scale,
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(type='Normalize', **cfg.img_norm_cfg),
+                    dict(type='Pad', size_divisor=32),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+    ]
+        
     test_pipeline = [
         dict(type='LoadImageFromFile'),
         dict(
             type='MultiScaleFlipAug',
-            img_scale=cfg.img_scale,
-            flip=False,
+            img_scale=[tuple(int(val * (1 + i / 10)) for val in cfg.img_scale) for i in [0,1.5,3]],
+            flip=[False, True, False],
             transforms=[
-                dict(type='Resize', keep_ratio=True),
+                dict(type='Resize', keep_ratio=False),
                 dict(type='Pad', size_divisor=32),
                 
                 dict(type='RandomFlip', direction='horizontal'),
@@ -835,7 +872,9 @@ def add_data_pipeline(cfg, params):
     ]    
     
     cfg.train_pipeline = train_pipeline
+    cfg.val_pipeline = val_pipeline
     cfg.test_pipeline = test_pipeline
+    
     
     if params['aug_param']['use_mixup'] or params['aug_param']['use_mosaic']:
         cfg.train_dataset = dict(
@@ -856,8 +895,8 @@ def add_data_pipeline(cfg, params):
         cfg.data.train = cfg.train_dataset
     else:
         cfg.data.train.pipeline = cfg.train_pipeline
-    #adding val pipeline like this cannot work
-    #cfg.data.val.pipeline = cfg.train_pipeline
+        
+    cfg.data.val.pipeline = cfg.val_pipeline
     cfg.data.test.pipeline = cfg.test_pipeline 
     
     return cfg    

@@ -46,6 +46,18 @@ class YOLOV5(Base):
     mixup = 0.2  # image mixup (probability)
     copy_paste = 0.0  # segment copy-paste (probability)
     
+class YOLOV5_LR5e3(YOLOV5):
+    lr0 = 5e-3
+
+class YOLOV5_LR5e4(YOLOV5):
+    lr0 = 5e-4
+
+class YOLOV5_SA_LR5e4(YOLOV5):
+    # stronger augmentation
+    mixup = 0.5
+    lr0 = 5e-4
+    
+    
 class sheep(YOLOV5):
     lr0 = 0.01
     lrf = 0.1
@@ -53,7 +65,9 @@ class sheep(YOLOV5):
     
 class YOLOV5_B4(Base):
     lr0 = 6e-4
-    
+
+class YOLOV5_B4_MU8(YOLOV5_B4):
+    mixup = 0.8
     
 def read_hyp_param(name):
     assert name in globals(), "name is not in " + str(globals())

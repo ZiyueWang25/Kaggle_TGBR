@@ -5,7 +5,6 @@ class Base:
     loss_fnc = "L1Loss" # L1Loss, GIoULoss
     nms="nms" # nms, soft_nsm
     sampler = 'RandomSampler' # RandomSampler, OHEMSampler, 
-    lr = 0.02
     
 class FasterRCNN(Base):
     script_f = 'mmdetection'
@@ -21,6 +20,11 @@ class swin(Base):
     base_file = 'swin/TFGBR_swin_base_faster_rcnn_fp16.py'
     load_from = "swin_small_patch4_window7_224.pth"
     lr = 0.0001
+
+class vfnet(Base):
+    model_type = 'vfnet'
+    base_file = 'vfnet/vfnet_r50_fpn_mdconv_c3-c5_mstrain_2x_coco.py'
+    load_from = "vfnet_r50_fpn_mdconv_c3-c5_mstrain_2x_coco_20201027pth-6879c318.pth"
     
 # class swin2(Base):
 #     model_type = "swin"

@@ -94,6 +94,6 @@
 # python3 train.py --exp_name yolov5x6_1320_MU8 --cv_split v2 --img_size 1320 --batch 4 --hyp_name YOLOV5_B4_MU8 --weights yolov5x6.pt --workers 4 --keep-highFP --epochs 20
 
 
-python3 train.py --exp_name yolov5x6_1320 --cv_split v2 --img_size 1320 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5x6.pt --workers 4 --keep-highFP --epochs 20
+python3 train.py --exp_name yolov5x6_1320_debug --cv_split v2 --img_size 1320 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5x6.pt --workers 4 --keep-highFP --epochs 15 --debug
 
-python3 train.py --exp_name yolov5x6_1320 --cv_split v2 --img_size 1320 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5x6.pt --workers 4 --keep-highFP --epochs 20 --whole_run
+# python3 train.py --exp_name yolov5x6_1320_whole --cv_split v2 --img_size 1320 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5x6.pt --workers 4 --keep-highFP --epochs 15 --whole_run

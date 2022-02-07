@@ -2,6 +2,9 @@
 JSON2YOLO/
 input/*.pt
 input/key.txt
+input/wbf_pred.pkl
+input/cots/
+darknet/
 
 apex/
 Swin-Transformer-Object-Detection/

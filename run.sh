@@ -94,6 +94,53 @@
 # python3 train.py --exp_name yolov5x6_1320_MU8 --cv_split v2 --img_size 1320 --batch 4 --hyp_name YOLOV5_B4_MU8 --weights yolov5x6.pt --workers 4 --keep-highFP --epochs 20
 
 
-python3 train.py --exp_name yolov5x6_1320_debug --cv_split v2 --img_size 1320 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5x6.pt --workers 4 --keep-highFP --epochs 15 --debug
+# python3 train.py --exp_name yolov5x6_1320_debug --cv_split v2 --img_size 1320 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5x6.pt --workers 4 --keep-highFP --epochs 15 --debug
 
 # python3 train.py --exp_name yolov5x6_1320_whole --cv_split v2 --img_size 1320 --batch 4 --hyp_name YOLOV5_B4 --weights yolov5x6.pt --workers 4 --keep-highFP --epochs 15 --whole_run
+
+
+# python3 train.py --exp_name yolov5s6_debug --cv_split v2 --img_size 3072 --batch 4 --hyp_name HIGH --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 12 --debug
+# python3 train.py --exp_name yolov5s6_B --cv_split v2 --img_size 3072 --batch 4 --hyp_name Base --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 12
+# python3 train.py --exp_name yolov5s6_MA --cv_split v2 --img_size 3072 --batch 4 --hyp_name MED --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 12
+# python3 train.py --exp_name yolov5s6_HA --cv_split v2 --img_size 3072 --batch 4 --hyp_name HIGH --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 12
+
+# python3 train.py --exp_name yolov5m6_B --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12
+
+#python3 train.py --exp_name yolov5m_TPH_B_debug --cv_split v2 --img_size 1900 --batch 4 --hyp_name Base --weights yolov5m.pt --workers 2 --keep-highFP --epochs 12 --cfg /home/vincent/Kaggle/Kaggle_TGBR/yolov5/models/yolov5m-xs-tph.yaml --debug
+
+# python3 train.py --exp_name m_TPH_1900_B --cv_split v2 --img_size 1900 --batch 4 --hyp_name Base --weights yolov5m.pt --workers 2 --keep-highFP --epochs 12 --cfg /home/vincent/Kaggle/Kaggle_TGBR/yolov5/models/yolov5m-xs-tph.yaml
+# python3 train.py --exp_name m_TPH_1900_B_whole --cv_split v2 --img_size 1900 --batch 4 --hyp_name Base --weights yolov5m.pt --workers 2 --keep-highFP --epochs 12 --cfg /home/vincent/Kaggle/Kaggle_TGBR/yolov5/models/yolov5m-xs-tph.yaml --whole_run
+
+# python3 train.py --exp_name m_P7_B_debug --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m.pt --workers 2 --keep-highFP --epochs 12 --cfg /home/vincent/Kaggle/Kaggle_TGBR/yolov5/models/hub/yolov5m-p7.yaml --debug
+
+# python3 train.py --exp_name m_P7_2300_B --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m.pt --workers 2 --keep-highFP --epochs 12 --cfg /home/vincent/Kaggle/Kaggle_TGBR/yolov5/models/hub/yolov5m-p7.yaml
+# python3 train.py --exp_name m_TPH_1900_B_LR1e3 --cv_split v2 --img_size 1900 --batch 4 --hyp_name B_LR1e3 --weights yolov5m.pt --workers 2 --keep-highFP --epochs 12 --cfg /home/vincent/Kaggle/Kaggle_TGBR/yolov5/models/yolov5m-xs-tph.yaml
+
+# python3 train.py --exp_name yolov5m6_B_LS02 --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2
+# python3 train.py --exp_name yolov5m6_B_LS06 --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.6
+# python3 train.py --exp_name m_P7_2300_B_LR1e3 --cv_split v2 --img_size 2300 --batch 4 --hyp_name B_LR1e3 --weights yolov5m.pt --workers 2 --keep-highFP --epochs 12 --cfg /home/vincent/Kaggle/Kaggle_TGBR/yolov5/models/hub/yolov5m-p7.yaml
+# python3 train.py --exp_name yolov5s6_B_whole --cv_split v2 --img_size 3072 --batch 4 --hyp_name Base --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 12 --whole_run
+
+# python3 train.py --exp_name yolov5m6_B_LS02_whole --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --whole_run
+#python3 train.py --exp_name yolov5m6_B_LS01 --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.1
+#python3 train.py --exp_name m_TPH_1900_B_LS02 --cv_split v2 --img_size 1900 --batch 4 --hyp_name Base --weights yolov5m.pt --workers 2 --keep-highFP --epochs 12 --cfg /home/vincent/Kaggle/Kaggle_TGBR/yolov5/models/yolov5m-xs-tph.yaml --label-smoothing 0.2
+
+# python3 train.py --exp_name yolov5m6_B_LS02_newGT_debug --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot --debug
+
+python3 train.py --exp_name yolov5m6_B_LS02_newGT --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot
+
+python3 train.py --exp_name yolov5s6_B_LS02_newGT --cv_split v2 --img_size 3072 --batch 4 --hyp_name Base --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot
+
+python3 train.py --exp_name m_TPH_1900_B_newGT --cv_split v2 --img_size 1900 --batch 4 --hyp_name Base --weights yolov5m.pt --workers 2 --keep-highFP --epochs 12 --cfg /home/vincent/Kaggle/Kaggle_TGBR/yolov5/models/yolov5m-xs-tph.yaml --use_new_annot
+
+python3 train.py --exp_name yolov5m6_B_LS02_newGT_clahe --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot --use_clahe
+
+
+
+# python3 train.py --exp_name yolov5m6_B_LS02_clahe --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_clahe
+# python3 train.py --exp_name yolov5s6_B_LS02 --cv_split v2 --img_size 3072 --batch 4 --hyp_name Base --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2
+# python3 train.py --exp_name yolov5s6_B_LS02_whole --cv_split v2 --img_size 3072 --batch 4 --hyp_name Base --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --whole_run
+# python3 train.py --exp_name yolov5m6_HA --cv_split v2 --img_size 2300 --batch 4 --hyp_name HIGH --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12
+
+# mmdetection
+# 0202_frcnn_1600_highFP_e8_wholerun is incorrect, need to fix

@@ -28,7 +28,11 @@ class Pre:
     
     def prepare_data(self):
         logging.debug("prepare_data")
-        self.df = pd.read_csv(self.params['root_dir'] / 'train.csv')
+        if self.params['use_new_annot']:
+            self.df = pd.read_csv(self.params['root_dir'] / 'train_with_added_GT.csv')
+            self.df['annotations'] = self.df['new_annotations']
+        else:
+            self.df = pd.read_csv(self.params['root_dir'] / 'train.csv')
         if self.params["debug"]:
             np.random.seed(2020)
             num_sample = self.df.shape[0] // 20
@@ -44,7 +48,7 @@ class Pre:
         
         highFP_df = pd.read_csv('./input/df_highFPNoBB.csv')
         self.df = pd.merge(self.df, highFP_df[['video_id',"video_frame","highFBNoBB"]], on=["video_id","video_frame"], how='left')
-        self.df["highFBNoBB"].fillna(False)
+        self.df["highFBNoBB"].fillna(False, inplace=True)
         
         if not self.params['keep_nobbox']:
             logging.info("Remove no bbox instance")
@@ -212,11 +216,14 @@ def parse_args():
     parser.add_argument('--tools', type=str, default='yolov5') # or mmdetection
     parser.add_argument('--exp_name', type=str, default='todo')
     parser.add_argument('--fold', type=int, nargs='+', default=4)        
+    parser.add_argument("--use_new_annot", action="store_true")    
     parser.add_argument('--data_path', type=str, default="../data/tensorflow-great-barrier-reef/")
     parser.add_argument('--keep_nobbox', action='store_true')
     parser.add_argument('--seed', type=int, default=2022)
     parser.add_argument('--copy_image', action='store_true')
     parser.add_argument('--debug', action="store_true")
+    parser.add_argument('--cfg', type=str, default='', help='model.yaml path')
+    
     
     parser.add_argument('--cv_split', type=str, default="custom") # subsequence, video_id, sequence, custom, v2
     parser.add_argument('--whole_run', action="store_true") # only useful when cv_split is v2
@@ -225,6 +232,7 @@ def parse_args():
     parser.add_argument('--keep-highFP', action="store_true")
     parser.add_argument('--reduce_nobbox', type=float, default=0)
     parser.add_argument("--rect", action="store_true")    
+    parser.add_argument('--label-smoothing', type=float, default=0.0, help='Label smoothing epsilon')
 
     parser.add_argument("--pretrain", action="store_true")    
     parser.add_argument("--sliced", action="store_true")    
@@ -328,6 +336,8 @@ def call_subprocess(params):
                         "--project", params["project"],
                         '--device', params['device'],
                         '--score_thres', str(params['score_thres']),
+                        '--label-smoothing', str(params['label_smoothing']),
+                        '--cfg', str(params['cfg']),
                         ]
         if hyp_file != "":
             args.extend(["--hyp", str(hyp_file)])

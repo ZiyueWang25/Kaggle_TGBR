@@ -155,10 +155,12 @@
 # python3 train.py --exp_name s6_B_LS02_newGT_clahe --cv_split v2 --img_size 3072 --batch 4 --hyp_name Base --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot --use_clahe
 # python3 train.py --exp_name s6_B_LS02_newGT_clahe_whole --cv_split v2 --img_size 3072 --batch 4 --hyp_name Base --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot --use_clahe --whole_run --upload
 
-
-python3 train.py --exp_name m6_B_LS02_newLGBT --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot 
-python3 train.py --exp_name m6_B_LS02_newLGBT_whole --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot --whole_run --upload
-
-
 # mmdetection
 # 0202_frcnn_1600_highFP_e8_wholerun is incorrect, need to fix
+
+# python3 train.py --exp_name m6_B_LS02_newLGBT --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot 
+# python3 train.py --exp_name m6_B_LS02_newLGBT_whole --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot --whole_run --upload
+
+
+python3 train.py --exp_name s6_B_LS02_newGT_imgxxx_debug --cv_split v2 --img_size 3072 --batch 4 --hyp_name Base --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot
+python3 train.py --exp_name s6_B_LS02_newGT_imgxxx_whole --cv_split v2 --img_size 3072 --batch 4 --hyp_name Base --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot --use_clahe --whole_run

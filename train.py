@@ -30,7 +30,7 @@ class Pre:
         logging.debug("prepare_data")
         if self.params['use_new_annot']:
             self.df = pd.read_csv(self.params['root_dir'] / 'train_with_added_GT.csv')
-            self.df['annotations'] = self.df['new_annotations']
+            self.df['annotations'] = self.df['new_annotations_LB']
         else:
             self.df = pd.read_csv(self.params['root_dir'] / 'train.csv')
         if self.params["debug"]:

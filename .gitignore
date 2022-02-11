@@ -13,6 +13,11 @@ Swin-Transformer-Object-Detection/
 TGBR_anjum/
 wandb/
 mmdetection/
+Weighted-Boxes-Fusion/
+input/96/
+input/*.zip
+notebook/oof_pred/
+
 notebook/model_output/
 notebook/pic_check/
 notebook/*.pkl

@@ -560,11 +560,15 @@ def load_yaml(folder_path):
     return data
 
 def load_model(params):
-    model = torch.hub.load(params['repo'],
-                           'custom',
-                           path=params['ckpt_path'],
-                           source='local',
-                           force_reload=True)  # local repo
+    try:
+        model = torch.hub.load(params['repo'],
+                            'custom',
+                            path=params['ckpt_path'],
+                            source='local',
+                            force_reload=True)  # local repo
+    except:
+        print("torch.hub.load failed, try torch.load")
+        model = torch.load(params['ckpt_path'])
     model.conf = params['conf']  # NMS confidence threshold
     model.iou  = params['iou']  # NMS IoU threshold
     model.classes = None   # (optional list) filter by class, i.e. = [0, 15, 16] for persons, cats and dogs

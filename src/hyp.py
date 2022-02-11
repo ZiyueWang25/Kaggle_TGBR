@@ -40,6 +40,11 @@ class MED(Base):
 class HIGH(MED):
     copy_paste: 0.1  # segment copy-paste (probability)
     
+class NEW(Base):
+    lr = 0.001
+    lrf = 0.1
+    mosaic = 0.5
+    mixup = 0.5
 class B_LR1e4(Base):
     lr0 = 1e-4
     

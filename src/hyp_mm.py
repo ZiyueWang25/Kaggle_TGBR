@@ -7,10 +7,16 @@ class Base:
     sampler = 'RandomSampler' # RandomSampler, OHEMSampler, 
     
 class FasterRCNN(Base):
-    script_f = 'mmdetection'
     model_type = "faster_rcnn"
     base_file = "faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py"
     load_from = 'faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth' # pretrained
+    
+class CRCNN(Base):
+    model_type = "cascade_rcnn"
+    base_file = "cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco.py"
+    load_from = 'cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth'
+    
+    
         
 class swin(Base):
     script_f = "mmdetection"# "Swin-Transformer-Object-Detection"

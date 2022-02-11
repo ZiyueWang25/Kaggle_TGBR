@@ -161,6 +161,20 @@
 # python3 train.py --exp_name m6_B_LS02_newLGBT --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot 
 # python3 train.py --exp_name m6_B_LS02_newLGBT_whole --cv_split v2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot --whole_run --upload
 
+# python3 train.py --exp_name s6_B_LS02_newGT_imgxxx_debug --cv_split v2 --img_size 3072 --batch 4 --hyp_name Base --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 10 --label-smoothing 0.2 --use_new_annot --copy_image
+# python3 train.py --exp_name s6_B_LS02_newGT_imgxxx_whole --cv_split v2 --img_size 3072 --batch 4 --hyp_name Base --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 10 --label-smoothing 0.2 --use_new_annot --whole_run
 
-python3 train.py --exp_name s6_B_LS02_newGT_imgxxx_debug --cv_split v2 --img_size 3072 --batch 4 --hyp_name Base --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 10 --label-smoothing 0.2 --use_new_annot
-python3 train.py --exp_name s6_B_LS02_newGT_imgxxx_whole --cv_split v2 --img_size 3072 --batch 4 --hyp_name Base --weights yolov5s6.pt --workers 2 --keep-highFP --epochs 10 --label-smoothing 0.2 --use_new_annot --whole_run
+# python3 train.py --exp_name m6_B_LS02_newLGBT_video0 --cv_split video_id --fold 0 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot --resume
+# python3 train.py --exp_name m6_B_LS02_newLGBT_video2 --cv_split video_id --fold 2 --img_size 2300 --batch 4 --hyp_name Base --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 12 --label-smoothing 0.2 --use_new_annot 
+
+
+# python3 -m torch.distributed.launch --nproc_per_node 2  train.py --exp_name m6_B_LS02_LGBT_newP --cv_split v2 --img_size 2300 --batch 4 --optimizer Adam --hyp_name NEW --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 30 --label-smoothing 0.2 --use_new_annot --resume
+
+# python3 -m torch.distributed.launch --nproc_per_node 2  train.py --exp_name m6_B_LS02_LGBT_newP_whole --cv_split v2 --img_size 2300 --batch 4 --optimizer Adam --hyp_name NEW --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 22 --label-smoothing 0.2 --use_new_annot --whole_run
+
+# python3 -m torch.distributed.launch --nproc_per_node 2  train.py --exp_name m6_B_LS02_LGBT_newP_clahe_whole --cv_split v2 --img_size 2300 --batch 4 --optimizer Adam --hyp_name NEW --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 22 --label-smoothing 0.2 --use_new_annot --whole_run
+
+
+python3 train.py --exp_name crcnn_1600 --img_size 1600 --batch 4 --cv_split v2 --tools mmdetection --hyp_name CRCNN --epochs 11 --workers 6 --aug_name Base5 --keep-highFP --use_new_annot
+
+# python3 -m torch.distributed.launch --nproc_per_node 2  train.py --exp_name m6_B_LS02_LGBT_newP_clahe --cv_split v2 --img_size 2300 --batch 4 --optimizer Adam --hyp_name NEW --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 20 --label-smoothing 0.2 --use_new_annot --use_calhe

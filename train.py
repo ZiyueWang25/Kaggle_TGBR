@@ -236,7 +236,8 @@ def parse_args():
 
     parser.add_argument("--pretrain", action="store_true")    
     parser.add_argument("--sliced", action="store_true")    
-    
+    parser.add_argument('--local_rank', type=int, default=-1)    
+    parser.add_argument('--resume', nargs='?', const=True, default=False, help='resume most recent training')
 
     parser.add_argument('--batch', type=int, default=16)
     parser.add_argument('--epochs', type=int, default=30)
@@ -354,6 +355,9 @@ def call_subprocess(params):
             args.extend(["--nosave"])  
         if params['rect']:          
             args.extend(["--rect"])  
+        if params['resume']:          
+            args.extend(["--resume"])  
+            #args.extend(f"\"{params['resume']}\"")  
         subprocess.call(args)
     elif params['tools'] == 'mmdetection':
         params['aug_param']['img_size'] = params['img_size']

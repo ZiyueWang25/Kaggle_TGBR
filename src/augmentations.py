@@ -22,9 +22,30 @@ class Base5(Base):
     HueSaturationValue = 0.5
     RandomBrightnessContrast = 0.5
     RandomSizedBBoxSafeCrop = 0.5
+
+class Base7(Base):
+    HorizontalFlip = 0.7
+    Flip = 0.7
+    RandomRotate90 = 0.7
+    CLAHE = 0.7
+    HueSaturationValue = 0.7
+    RandomBrightnessContrast = 0.7
+    RandomSizedBBoxSafeCrop = 0.7
+
+class Base85(Base):
+    HorizontalFlip = 0.85
+    Flip = 0.85
+    RandomRotate90 = 0.85
+    CLAHE = 0.85
+    HueSaturationValue = 0.85
+    RandomBrightnessContrast = 0.85
+    RandomSizedBBoxSafeCrop = 0.85
+    
 class baseFlipRotate(Base):
     Flip = 0.5
     RandomRotate90 = 0.5
+    
+    
 class baseFHue(Base):
     HueSaturationValue = 0.5
 

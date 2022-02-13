@@ -7,6 +7,7 @@ input/cots/
 input/train_oof_v79.csv
 input/wbf_notrack_pred.pkl
 darknet/
+raft_pytorch/
 
 apex/
 Swin-Transformer-Object-Detection/

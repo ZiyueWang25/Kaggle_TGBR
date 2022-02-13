@@ -643,13 +643,7 @@ def upload(params):
     if os.path.exists(params["output_dir"] / "wandb"):
         shutil.move(str(params["output_dir"] / "wandb"), 
                     str(params["output_dir"].parent / f"{params['exp_name']}_wandb/")
-        )
-        
-    if len(glob(str(params['output_dir'] / "epoch*.pth"))) > 0:
-        # work when params["tools"] == "mmdetection"
-        for file in glob(str(params['output_dir'] / "epoch*.pth")):
-            os.remove(file)
-        
+        )        
     with open(params["output_dir"] / "dataset-metadata.json", "w") as f:
         f.write("{\n")
         f.write(f"""  "title": "{data_version}",\n""")
@@ -715,7 +709,7 @@ def mmcfg_from_param(params):
         cfg.model.test_cfg.rpn.nms.type = params['hyp_param']['nms']
         cfg.model.test_cfg.rcnn.nms.type = params['hyp_param']['nms']
         
-        cfg.model.train_cfg.rcnn.sampler.type = params['hyp_param']['sampler']
+        cfg.model.train_cfg.rcnn.sampler.type = params['hyp_param']['sampler']            
         
     elif params['hyp_param']['model_type'] == 'swin':        
         pass # already changed
@@ -861,14 +855,12 @@ def add_data_pipeline(cfg, params):
         dict(type='LoadImageFromFile'),
         dict(
             type='MultiScaleFlipAug',
-            img_scale=[tuple(int(val * (1 + i / 10)) for val in cfg.img_scale) for i in [0,1.5,3]],
-            flip=[False, True, False],
+            img_scale=[cfg.img_scale],
+            flip=[False],
             transforms=[
                 dict(type='Resize', keep_ratio=False),
                 dict(type='Pad', size_divisor=32),
-                
                 dict(type='RandomFlip', direction='horizontal'),
-                
                 dict(type='Normalize', **cfg.img_norm_cfg),
                 dict(type='ImageToTensor', keys=['img']),
                 dict(type='Collect', keys=['img']),

@@ -70,9 +70,6 @@
 
 # python3 train.py --exp_name m6_1200_sliced_S720_ma025 --img_size 1200  --batch 14 --hyp_name YOLOV5 --epochs 15 --workers 8 --weights yolov5m6.pt --sliced --data_path /home/vincent/Kaggle/data/tensorflow-great-barrier-reef/sliced/MA0.25/
 
-
-# python3 train.py --exp_name m6_1200_sliced_S720_ma025_lr5e3 --img_size 1200  --batch 14 --hyp_name YOLOV5_LR5e3 --epochs 15 --workers 8 --weights yolov5m6.pt --sliced --data_path /home/vincent/Kaggle/data/tensorflow-great-barrier-reef/sliced/MA0.25/
-
 # python3 train.py --exp_name m6_1200_sliced_S720_ma025_lr5e4 --img_size 1200  --batch 14 --hyp_name YOLOV5_LR5e4 --epochs 15 --workers 8 --weights yolov5m6.pt --sliced --data_path /home/vincent/Kaggle/data/tensorflow-great-barrier-reef/sliced/MA0.25/
 
 
@@ -175,6 +172,25 @@
 # python3 -m torch.distributed.launch --nproc_per_node 2  train.py --exp_name m6_B_LS02_LGBT_newP_clahe_whole --cv_split v2 --img_size 2300 --batch 4 --optimizer Adam --hyp_name NEW --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 22 --label-smoothing 0.2 --use_new_annot --whole_run
 
 
-python3 train.py --exp_name crcnn_1600 --img_size 1600 --batch 4 --cv_split v2 --tools mmdetection --hyp_name CRCNN --epochs 11 --workers 6 --aug_name Base5 --keep-highFP --use_new_annot
+# python3 train.py --exp_name crcnn_1600 --img_size 1600 --batch 4 --cv_split v2 --tools mmdetection --hyp_name CRCNN --epochs 11 --workers 6 --aug_name Base5 --keep-highFP --use_new_annot
 
-# python3 -m torch.distributed.launch --nproc_per_node 2  train.py --exp_name m6_B_LS02_LGBT_newP_clahe --cv_split v2 --img_size 2300 --batch 4 --optimizer Adam --hyp_name NEW --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 20 --label-smoothing 0.2 --use_new_annot --use_calhe
+# python3 -m torch.distributed.launch --nproc_per_node 2  train.py --exp_name m6_B_LS02_LGBT_newP_clahe --cv_split v2 --img_size 2300 --batch 4 --optimizer Adam --hyp_name NEW --weights yolov5m6.pt --workers 2 --keep-highFP --epochs 20 --label-smoothing 0.2 --use_new_annot --use_clahe --local_rank 0
+
+# python3 train.py --exp_name crcnn_OHEM_softNMS --img_size 1600 --batch 4 --cv_split v2 --tools mmdetection --hyp_name CRCNN --epochs 11 --workers 6 --aug_name Base5 --keep-highFP --use_new_annot
+
+# python3 train.py --exp_name crcnn_1600_whole --img_size 1600 --batch 4 --cv_split v2 --tools mmdetection --hyp_name CRCNN --epochs 11 --workers 6 --aug_name Base5 --keep-highFP --use_new_annot --whole_run
+
+# python3 train.py --exp_name crcnn_1600_baseFlip --img_size 1600 --batch 4 --cv_split v2 --tools mmdetection --hyp_name CRCNN --epochs 10 --workers 6 --aug_name baseFlipRotate --keep-highFP --use_new_annot
+
+# python3 train.py --exp_name crcnn_1600_base7 --img_size 1600 --batch 4 --cv_split v2 --tools mmdetection --hyp_name CRCNN --epochs 10 --workers 6 --aug_name Base7 --keep-highFP --use_new_annot
+
+# python3 train.py --exp_name crcnn_1600_baseFlip_whole --img_size 1600 --batch 4 --cv_split v2 --tools mmdetection --hyp_name CRCNN --epochs 10 --workers 6 --aug_name baseFlipRotate --keep-highFP --use_new_annot --whole
+
+# python3 train.py --exp_name crcnn_1600_e20 --img_size 1600 --batch 4 --cv_split v2 --tools mmdetection --hyp_name CRCNN --epochs 20 --workers 6 --aug_name Base7 --keep-highFP --use_new_annot
+
+# python3 train.py --exp_name crcnn_1600_base7_whole --img_size 1600 --batch 4 --cv_split v2 --tools mmdetection --hyp_name CRCNN --epochs 11 --workers 6 --aug_name Base7 --keep-highFP --use_new_annot --whole_run
+
+
+# python3 train.py --exp_name crcnn_1600_e20 --img_size 1600 --batch 4 --cv_split v2 --tools mmdetection --hyp_name CRCNN --epochs 20 --workers 6 --aug_name Base85 --keep-highFP --use_new_annot
+
+# python3 train.py --exp_name m6_1200_sliced_S720_ma025_lr5e3 --img_size 1200  --batch 14 --hyp_name YOLOV5_LR5e3 --epochs 15 --workers 8 --weights yolov5m6.pt --sliced --data_path /home/vincent/Kaggle/data/tensorflow-great-barrier-reef/sliced/MA0.25/

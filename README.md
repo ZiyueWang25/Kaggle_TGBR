@@ -1,5 +1,5 @@
 # Kaggle TensorFlow - Help Protect the Great Barrier Reef
-Kaggle Competition - TensorFlow - Help Protect the Great Barrier Reef
+Kaggle Competition - TGBR (11th Solution)
 
 ## Team: 
 - [Vincent Wang](https://www.kaggle.com/vincentwang25)

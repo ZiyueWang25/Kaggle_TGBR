@@ -1,7 +1,17 @@
-# Kaggle_TGBR
+# Kaggle TensorFlow - Help Protect the Great Barrier Reef
 Kaggle Competition - TensorFlow - Help Protect the Great Barrier Reef
 
+## Team: 
+- [Vincent Wang](https://www.kaggle.com/vincentwang25)
+- [anjum48](https://www.kaggle.com/anjum48)
+- [yamsam](https://www.kaggle.com/yamsam)
+- [Ioannis Meintanis](https://www.kaggle.com/imeintanis)
+- [markunys](https://www.kaggle.com/markunys)
+
 ## Our 11th place solution is [here](https://www.kaggle.com/c/tensorflow-great-barrier-reef/discussion/307718)
+
+![image](https://github.com/user-attachments/assets/c1505084-6ba3-4260-b97b-c4748b7951c9)
+
 
 ## Lessons from other top solution:
 
